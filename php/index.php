@@ -25,7 +25,7 @@
 
 <?php
 
-require 'php/game.php';
+require 'game.php';
 
 ?>
 
