@@ -24,9 +24,10 @@ class Player:
         else:
             return card
             
-    def removehighestcard(self):
-        if(self.cards[-1] != 0):
-            self.cards.pop()
+    def removehighestcards(self, amount = 1):
+        for i in range(amount):
+            if(self.cards[-1] != 0):
+                self.cards.pop()
 
     def removecard(self, card):
         index = self.cards.index(card)
@@ -69,18 +70,16 @@ class Game:
 
     def updateplayers(self, roundresults, playedcards):
         for index, roundresult in enumerate(roundresults):
-            if(roundresult == "win"):
+            if roundresult == "win":
                 cards = playedcards[index] - 1 #remove cards - 1 for win
                 self.players[index].crowns += 1 #add crown
-                [self.players[index].removehighestcard() for i in range(cards)]
-            elif(roundresult == "loss"):
+                self.players[index].removehighestcards(cards)
+            elif roundresult == "loss":
                 cards = playedcards[index] # remove all cards for loss
-                [self.players[index].removehighestcard() for i in range(cards)]
-            elif(roundresult == "tie"):
-                playercard = playedcards[index] # remove 1 card for tie
+                self.players[index].removehighestcards(cards)
+            elif roundresult == "tie":
+                playedcard = playedcards[index] # remove 1 card for tie
                 self.players[index].removecard(playedcard)
-
-
 
         if self.verbose: #print console output
             self.printroundresults(roundresults, playedcards)
@@ -128,7 +127,7 @@ class Game:
             rr[index] = "win"
         else:
             for i in range(len(rr)):
-                if(playedcards == highestcard):
+                if(playedcards[i] == highestcard):
                     rr[i] = "tie"
         return rr
 
