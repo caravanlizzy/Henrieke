@@ -1,7 +1,8 @@
 import game 
 
-print(game)
-game = Game()
+# names = ["Niklas", "Franzis", "Peter", "Nata", ""]
+
+game = game.Game()
 game.addplayer("Niklas")
 game.addplayer("Peter")
 game.addplayer("Franz")

@@ -17,10 +17,11 @@ class Player{
         if ($this->strategy == "random") {
             $card = array_rand($this->cards);
         }
+        return $card;
     }
 
     function removehighestcards($amount = 1) {
-        for($i = 0; $i < count($amount); $i++) {
+        for($i = 0; $i < $amount; $i++) {
             if ($this->cards[-1] != 0) {
                 array_pop($this->cards);
             }
@@ -70,7 +71,9 @@ class Game{
 
     function printroundresults($roundresults, $playedcards) {
         for($i = 0; $i < count($this->players); $i++) {
-            print_r($this->players[$i]->name + " played: " + $playedcards[$i]);
+            print_r($this->players[$i]->name);
+            echo " played :";
+            print_r($playedcards[$i]);
         }
     }
 
@@ -109,19 +112,20 @@ class Game{
         $this->reset();
         $nplayers = count($this->players);
         if($nplayers < 2){
-            print_r("Not enough players");
+            echo "Not enough players \r\n";
         } else if( $nplayers == 2) {
             $this->crownstowin = 3;
         } else{
             $this->crownstowin = 2;
         }
-        print_r("Welcome to Henriekow! Good luck.");
+        echo "Welcome to Henriekow! Good luck.\r\n";
         $gameover = $this->checkwin();
         while ($gameover == false){
             $this->runround();
             $gameover = $this->checkwin();
         }
-        print_r($this->findwinner()->name + " wins the game!");
+        print_r($this->findwinner()->name);
+        echo " wins the game!";
     }
 
     function runround() {
@@ -142,7 +146,7 @@ class Game{
         $highestcard = max($playedcards);
         $occurence = array_count_values($playedcards)[$highestcard];
         if($occurence == 1) {
-            $index = array_search($playedcards, $highestcard);
+            $index = array_search($highestcard, $playedcards);
             $roundresults[$index] = "win";
         } else {
             for($i = 0; $i < count($roundresults); $i++) {
