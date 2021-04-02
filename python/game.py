@@ -50,7 +50,7 @@ class Game:
         self.players = []
         self.crownstowin = 2
         self.round = 0
-        self.verbose = True
+        self.verbose = False
 
     def addplayer(self, name, human = False):
         player = Player(name)
@@ -89,9 +89,9 @@ class Game:
         for player in self.players:
             if player.crowns >= self.crownstowin:
                 return True
-        return False  
+        return False 
 
-    def startgame(self):
+    def initgame(self):
         self.reset()
         nplayers = len(self.players)
         if nplayers < 2:
@@ -100,18 +100,23 @@ class Game:
             self.crownstowin = 3
         else:
             self.crownstowin = 2
-        print("Welcome to Henriekow! Good luck.")
+        if self.verbose:
+            print("Welcome to Henriekow! Good luck.")
+
+    def startgame(self):
+        self.initgame()
         gameover = self.checkwin()
         while gameover == False:
             self.runround()
             gameover = self.checkwin()
         else:
-            print(str(self.findwinner().name) + " wins the game!")
-            return
+            if self.verbose:
+                print(str(self.findwinner().name) + " wins the game!")
+            
 
 
     def runround(self):
-        self.round += 1
+        self.round += 1 
         playedcards = []
         for player in self.players:
             playedcards.append(player.playcard()) # play cards
