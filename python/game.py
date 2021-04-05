@@ -9,11 +9,13 @@ class Player:
         self.crowns = 0
         self.strategy = "random"
 
-    def playcard(self):
+    def playcard(self, card = 0):
         if self.strategy == "random":
             card = random.choice(self.cards)
         elif self.strategy == "human":
             card = self.getcardinput()
+        elif self.strategy == "ki":
+            pass
         return card 
 
     def getcardinput(self):
@@ -51,6 +53,8 @@ class Game:
         self.crownstowin = 2
         self.round = 0
         self.verbose = False
+        # self.trainki = False
+        self.gamestate = "idle"
 
     def addplayer(self, name, human = False):
         player = Player(name)
@@ -60,6 +64,7 @@ class Game:
 
     def reset(self):
         self.round = 0
+        self.gamestate = "idle"
 
     def printroundresults(self, roundresults, playedcards):
         print("roundresults:\n")
@@ -88,11 +93,13 @@ class Game:
     def checkwin(self):
         for player in self.players:
             if player.crowns >= self.crownstowin:
+                self.gamestate = "over"
                 return True
         return False 
 
     def initgame(self):
         self.reset()
+        self.gamestate = "running"
         nplayers = len(self.players)
         if nplayers < 2:
             print("Not enough players.")
@@ -115,13 +122,20 @@ class Game:
             
 
 
-    def runround(self):
+    def runround(self, cards):
         self.round += 1 
-        playedcards = []
-        for player in self.players:
-            playedcards.append(player.playcard()) # play cards
+        playedcards = cards
+        for i, player in enumerate(self.players): 
+            if(player.strategy != "ki"):
+                playedcards[i] = (player.playcard()) # play card according to strategy
+            else:
+                if cards[i] not in player.cards: # ki uses the card that is passed in cards
+                    self.gamestate = "abort"
         roundresults = self.getroundresults(playedcards) # evaluate round
         self.updateplayers(roundresults, playedcards) # update player cards and crowns
+        return roundresults
+        
+
 
     def getroundresults(self, playedcards):
         rr = ["loss"] * len(playedcards)
