@@ -8,15 +8,21 @@ class Player:
         self.cards = [i for i in range(11)]
         self.crowns = 0
         self.strategy = "random"
+        self.model = None
 
     def playcard(self, card = 0):
         if self.strategy == "random":
             card = random.choice(self.cards)
         elif self.strategy == "human":
             card = self.getcardinput()
-        elif self.strategy == "ki":
+            print(card)
+        elif self.strategy == "kitrain":
             pass
+        elif self.strategy == "ki":
+            return card # must be adapted
         return card 
+
+    
 
     def getcardinput(self):
         card = -1
@@ -53,7 +59,7 @@ class Game:
         self.crownstowin = 2
         self.round = 0
         self.verbose = False
-        # self.trainki = False
+        self.trainki = False
         self.gamestate = "idle"
 
     def addplayer(self, name, human = False):
@@ -112,27 +118,30 @@ class Game:
 
     def startgame(self):
         self.initgame()
-        gameover = self.checkwin()
-        while gameover == False:
+        if self.trainki:
+            return
+        while self.gamestate == "running":
             self.runround()
-            gameover = self.checkwin()
         else:
             if self.verbose:
                 print(str(self.findwinner().name) + " wins the game!")
-            
+            return self.findwinner()
 
 
-    def runround(self, cards):
+    def runround(self, cards = [0]*9):
+        # if self.gamestate != "running":
+        #     return
         self.round += 1 
-        playedcards = cards
+        playedcards = cards[:len(self.players)]
         for i, player in enumerate(self.players): 
             if(player.strategy != "ki"):
-                playedcards[i] = (player.playcard()) # play card according to strategy
+                playedcards[i] = player.playcard() # play card according to strategy
             else:
                 if cards[i] not in player.cards: # ki uses the card that is passed in cards
                     self.gamestate = "abort"
         roundresults = self.getroundresults(playedcards) # evaluate round
         self.updateplayers(roundresults, playedcards) # update player cards and crowns
+        self.checkwin()
         return roundresults
         
 
