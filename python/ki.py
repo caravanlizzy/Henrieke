@@ -7,6 +7,7 @@ import numpy as np
 from collections import Counter
 import tqdm
 import time
+import math
 
 
 
@@ -23,17 +24,23 @@ rewards = {
 #name of the ai/ki
 kiname = "henrieke_ki"
 
+#training parameters
+nplayers = 5
+ngames = 10**2
+maxrounds = 35
+learningrate = 0.01
+optimizer = keras.optimizers.Adam(lr=learningrate)
+modelname = "randomopponents"
 
+# define input shape
 testinput = np.array([[i for i in range(60)]])
 inputshape = testinput[0].shape
-# print(testinput)
 
 
 # a first mode1
 
 model = keras.models.Sequential()
 model.add(keras.layers.Input(shape=inputshape))
-# model.add(keras.layers.Flatten())
 # model.add(keras.layers.Dense(75, activation="tanh"))
 model.add(keras.layers.Dense(40, activation="relu"))
 model.add(keras.layers.Dense(11, activation="softmax"))
@@ -64,11 +71,11 @@ def normalize(inputlist):
     return normed
 
 
-def transforminput(inputvector, kiposition): # function to adjust the input vector to guarantee the ki to be at position 0
-    transinput = [inputvector[kiposition]] #put the kiinput to the start
+def transforminput(inputvector, kiposition): # function to adjust the input vector to guarantee the ai to be at position 0
+    transinput = [inputvector[kiposition]] #put the ai-input to the start
     for index, inputlist in enumerate(inputvector):
         if index != kiposition:
-            transinput.append(inputlist) # fill up the non-ki inputvectors
+            transinput.append(inputlist) # fill up the non-ai inputvectors
     return transinput
     
 
@@ -80,7 +87,7 @@ def getkiseat(game, kiname):
 
 def setupgame(playernum): # setup a game with training settings
     newgame = cardgame.Game()
-    newgame.trainki = True
+    newgame.trainai = True
     newgame.addplayer(kiname)
     for i in range(playernum-1):
         newgame.addplayer("random"+str(i))
@@ -105,7 +112,7 @@ def getkireward(game, roundresult, rewards): #get the rewards for a given roundr
 
 def playround(game, model): # play a single round (each participants plays 1 card)
     with tf.GradientTape() as tape:
-        modelinput = gamestatetoinput(game)
+        modelinput = game.gamestatetoaiinput()
         modeloutput = model(modelinput)[0]
         card = np.random.choice(range(11), 1, np.array(modeloutput).tolist)
         move = np.zeros(11)
@@ -152,11 +159,14 @@ def createrandomgamestate(nplayers): # return an arbitrary gamestate (not won ye
     gamestate = [np.random.choice([0,1]) for i in range(60)]
     return np.array([gamestate], dtype=float)
 
-def playtestgame(model, playernames): # play a complete game - by default against random kis with the trained ki in seat 1
+c = createrandomgamestate # for quick access
+
+def playtestgame(model, playernames): # play a complete game - by default against random kis with the trained ai in seat 1
     game = cardgame.Game()
     for player in playernames:
         game.addplayer(player)
-    game.players[0].strategy = "ki"
+    game.players[0].strategy = "ai"
+    game.players[0].aimodel = model
     return game.startgame()
 
 def runtest(model, ngames = 100): # play #ngames and print the win percentage of the trained ki
@@ -164,26 +174,20 @@ def runtest(model, ngames = 100): # play #ngames and print the win percentage of
     wins = {}
     for name in playernames:
         wins.update({name : 0})
-    for k in range(ngames):
+    wins.update({"tie": 0})
+    for k in tqdm.tqdm(range(ngames), desc="Progress"):
         winner = playtestgame(model, playernames)
         name = winner.name
         wins[name] += 1
-    print(str(kiname) + " wins: " +str(wins["testki"]) + " times. -> " + str(wins["testki"]/ntestgames*100.0) + "%")
-
-
-
-
-ngames = 10**5
-maxrounds = 35
-optimizer = keras.optimizers.Adam(lr=0.001)
-
-r = createrandomgamestate
+    print("\n" + str(kiname) + " wins: " +str(wins[kiname]) + " times. -> " + str(wins[kiname]/ngames*100.0) + "%")
+    print("\n" + str(wins["tie"]/ngames * 100) + "% of the games ended tie.")
+    
 
 
 # loop to actually train the model
 for i in tqdm.tqdm(range(ngames), desc="Progress"):
     # print("\nGame # " + str(i))
-    allrewards, allgrads = playonegame(model, maxrounds)
+    allrewards, allgrads = playonegame(model, maxrounds, nplayers)
     finalrewards = normalizerewards(allrewards)
     allmeangrads = []
     for varindex in range(len(model.trainable_variables)):
@@ -192,12 +196,14 @@ for i in tqdm.tqdm(range(ngames), desc="Progress"):
             for step, finalreward in enumerate(finalrewards)], axis=0)
         allmeangrads.append(meangrads)
     optimizer.apply_gradients(zip(allmeangrads, model.trainable_variables))
+model.save(modelname)
 
-model.save("henrieke_model")
+trained_model = keras.models.load_model("henrieke_model")
+
+runtest(trained_model, 10**4)
 
 
 # todo:
-#   - training gegen andre strategien
-#   - api für ki in game.py
-#   - automatisiertes testen
 #   - plot the error/learning curve
+
+# %%

@@ -1,5 +1,6 @@
 #%%
 import random 
+import numpy as np
 from collections import Counter
 
 class Player:
@@ -8,18 +9,48 @@ class Player:
         self.cards = [i for i in range(11)]
         self.crowns = 0
         self.strategy = "random"
-        self.model = None
+        self.aimodel = None
 
-    def playcard(self, card = 0):
+    def playcard(self, game = None, card = 0):
         if self.strategy == "random":
             card = random.choice(self.cards)
         elif self.strategy == "human":
             card = self.getcardinput()
             print(card)
-        elif self.strategy == "kitrain":
+        elif self.strategy == "trainai":
             pass
-        elif self.strategy == "ki":
-            return card # must be adapted
+        elif self.strategy == "bea":
+            if game.round == 0:
+                card = 0
+            elif game.round == 1:
+                card = random.choice([0, 4])
+            else:
+                card = np.max(self.cards)
+        elif self.smodelnametrategy == "niklas":
+            if np.random.random() < 0.25:
+                card = 1
+            else:
+                card = 0
+        elif self.strategy == "henrieke":
+            if game.round < 2:
+                card = 0
+            elif game.round == 2:
+                card = 7
+            else:
+                card = np.max(self.cards)
+        elif self.strategy == "auswegslos":
+            if game.round < 4:
+                card = 0
+            elif game.round == 4:
+                card = 0
+            else:
+                card = np.max(self.cards)
+        elif self.strategy == "ai":
+            modelin = game.gamestatetoaiinput()
+            modelout = self.aimodel(modelin)[0]
+            card = np.argmax(modelout)
+            if card not in self.cards:
+                card = random.choice(self.cards)
         return card 
 
     
@@ -59,7 +90,7 @@ class Game:
         self.crownstowin = 2
         self.round = 0
         self.verbose = False
-        self.trainki = False
+        self.trainai = False
         self.gamestate = "idle"
 
     def addplayer(self, name, human = False):
@@ -97,6 +128,8 @@ class Game:
 
 
     def checkwin(self):
+        if self.round > 25:
+            self.gamestate = "over"
         for player in self.players:
             if player.crowns >= self.crownstowin:
                 self.gamestate = "over"
@@ -118,7 +151,7 @@ class Game:
 
     def startgame(self):
         self.initgame()
-        if self.trainki:
+        if self.trainai:
             return
         while self.gamestate == "running":
             self.runround()
@@ -129,20 +162,39 @@ class Game:
 
 
     def runround(self, cards = [0]*9):
-        # if self.gamestate != "running":
-        #     return
         self.round += 1 
         playedcards = cards[:len(self.players)]
         for i, player in enumerate(self.players): 
-            if(player.strategy != "ki"):
-                playedcards[i] = player.playcard() # play card according to strategy
+            if(player.strategy != "trainai"):
+                playedcards[i] = player.playcard(game = self) # play card according to strategy
             else:
-                if cards[i] not in player.cards: # ki uses the card that is passed in cards
+                if cards[i] not in player.cards: # ai uses the card that is passed in cards
                     self.gamestate = "abort"
         roundresults = self.getroundresults(playedcards) # evaluate round
         self.updateplayers(roundresults, playedcards) # update player cards and crowns
         self.checkwin()
         return roundresults
+
+    def gamestatetoaiinput(self): # function to extract the model input info from the game
+        allinputs = []
+        for player in self.players:
+            # playerinput = []
+            for card in range(11):
+                if card in player.cards:
+                    allinputs.append(1)
+                else:
+                    allinputs.append(0)
+            allinputs.append(player.crowns)
+        normedinput = self.normalize(allinputs)
+        return np.array([normedinput])
+
+
+    def normalize(self, inputlist):
+        inputs = np.array(inputlist)
+        mean = inputs.mean()
+        std = inputs.std()
+        normed = (inputs - mean)/std
+        return normed
         
 
 
@@ -163,6 +215,11 @@ class Game:
         for player in self.players:
             if player.crowns >= self.crownstowin:
                 return player
+            else:
+                newplayer = Player("tie") # workaround to have a pseudo winner in case of a tie
+                return newplayer
 
 
 
+
+# %%
