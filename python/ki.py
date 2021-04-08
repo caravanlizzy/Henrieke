@@ -14,7 +14,7 @@ import math
 
 # define the rewardsystem
 rewards = {
-    "base" : 1,
+    "base" : 0,
     "fail" : -100,
     "loss" : -10,
     "crown" : 5,
