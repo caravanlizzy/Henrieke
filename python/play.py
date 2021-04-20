@@ -1,6 +1,7 @@
+#%%
 import game 
 
-# names = ["Niklas", "Franzis", "Peter", "Nata", ""]
+### script to play a game 
 
 game = game.Game()
 game.addplayer("Niklas")
@@ -12,6 +13,10 @@ game.addplayer("Klaus")
 game.addplayer("Bea")
 game.addplayer("Hubertus")
 game.addplayer("YOU", "human")
+game.verbose = True
 
 #%%
 game.startgame()
+# %%
+
+

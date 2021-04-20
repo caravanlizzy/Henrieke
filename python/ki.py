@@ -10,27 +10,33 @@ import time
 import math
 
 
-
-
 # define the rewardsystem
 rewards = {
     "base" : 0,
     "fail" : -100,
     "loss" : -10,
     "crown" : 5,
-    "win" : 25
+    "win" : 60
 }
 
-#name of the ai/ki
-kiname = "henrieke_ki"
+
+
+# new ai settings
+trainmodel = False
+newmodelname = "zerobase_deep_model"
+
+# previous ai settings
+loadmodel = False
+loadmodelname = "henrieke_model"
+
 
 #training parameters
 nplayers = 5
-ngames = 10**2
+ngames = 10**6
 maxrounds = 35
 learningrate = 0.01
 optimizer = keras.optimizers.Adam(lr=learningrate)
-modelname = "randomopponents"
+
 
 # define input shape
 testinput = np.array([[i for i in range(60)]])
@@ -42,6 +48,8 @@ inputshape = testinput[0].shape
 model = keras.models.Sequential()
 model.add(keras.layers.Input(shape=inputshape))
 # model.add(keras.layers.Dense(75, activation="tanh"))
+model.add(keras.layers.Dense(190, activation="relu"))
+model.add(keras.layers.Dense(110, activation="tanh"))
 model.add(keras.layers.Dense(40, activation="relu"))
 model.add(keras.layers.Dense(11, activation="softmax"))
 model.summary()
@@ -79,16 +87,16 @@ def transforminput(inputvector, kiposition): # function to adjust the input vect
     return transinput
     
 
-def getkiseat(game, kiname):
+def getaiseat(game, newmodelname):
     for player in game.players:
-        if player.name == kiname:
+        if player.name == newmodelname:
             return game.players.index(player)
 
 
 def setupgame(playernum): # setup a game with training settings
     newgame = cardgame.Game()
     newgame.trainai = True
-    newgame.addplayer(kiname)
+    newgame.addplayer(newmodelname)
     for i in range(playernum-1):
         newgame.addplayer("random"+str(i))
     return newgame
@@ -96,13 +104,13 @@ def setupgame(playernum): # setup a game with training settings
 
 
 def getkireward(game, roundresult, rewards): #get the rewards for a given roundresult
-    kiseat = getkiseat(game, kiname)
+    aiseat = getaiseat(game, newmodelname)
     reward = rewards["base"]
     if game.gamestate == "abort":
         reward = rewards["fail"]
     elif roundresult[0] == "win":
         reward = rewards["crown"]
-        if game.players[kiseat].crowns == 2:
+        if game.players[aiseat].crowns == 2:
             reward = rewards["win"]
     else:
         for player in game.players:
@@ -137,14 +145,14 @@ def playonegame(model, maxrounds, nplayers): # play many rounds until either 1 p
             allrewards.append(reward)
             allgrads.append(grads)
             if(reward == -100):
-                break
+                break #abort game since an invalid card has been played
         else:
             break
     return allrewards, allgrads
 
 def normalizerewards(allrewards): 
     allrewards = np.array(allrewards)
-    if np.sum(allrewards) != 0:
+    if np.sum(allrewards) == 0:
         return allrewards
     mean = allrewards.mean()
     std = allrewards.std()
@@ -167,10 +175,12 @@ def playtestgame(model, playernames): # play a complete game - by default agains
         game.addplayer(player)
     game.players[0].strategy = "ai"
     game.players[0].aimodel = model
-    return game.startgame()
+    winner = game.startgame()
+    return winner
 
 def runtest(model, ngames = 100): # play #ngames and print the win percentage of the trained ki
-    playernames = [kiname, "Christian", "Uliana", "Florian", "Markus"]
+    ainame = "AI"
+    playernames = [ainame, "Christian", "Uliana", "Florian", "Markus"]
     wins = {}
     for name in playernames:
         wins.update({name : 0})
@@ -179,28 +189,33 @@ def runtest(model, ngames = 100): # play #ngames and print the win percentage of
         winner = playtestgame(model, playernames)
         name = winner.name
         wins[name] += 1
-    print("\n" + str(kiname) + " wins: " +str(wins[kiname]) + " times. -> " + str(wins[kiname]/ngames*100.0) + "%")
+    for p  in playernames:
+        print("\n" + str(p) + " wins: " +str(wins[p]) + " times. -> " + str(wins[p]/ngames*100.0) + "%")
     print("\n" + str(wins["tie"]/ngames * 100) + "% of the games ended tie.")
     
-
-
+trainmodel = True
 # loop to actually train the model
-for i in tqdm.tqdm(range(ngames), desc="Progress"):
-    # print("\nGame # " + str(i))
-    allrewards, allgrads = playonegame(model, maxrounds, nplayers)
-    finalrewards = normalizerewards(allrewards)
-    allmeangrads = []
-    for varindex in range(len(model.trainable_variables)):
-        meangrads = tf.reduce_mean(
-            [finalreward * allgrads[step][varindex]
-            for step, finalreward in enumerate(finalrewards)], axis=0)
-        allmeangrads.append(meangrads)
-    optimizer.apply_gradients(zip(allmeangrads, model.trainable_variables))
-model.save(modelname)
+if trainmodel:
+    if loadmodel:
+        model = keras.models.load_model(loadmodelname)
+    for i in tqdm.tqdm(range(ngames), desc="Progress"):
+        # print("\nGame # " + str(i))
+        allrewards, allgrads = playonegame(model, maxrounds, nplayers)
+        finalrewards = normalizerewards(allrewards)
+        allmeangrads = []
+        for varindex in range(len(model.trainable_variables)):
+            meangrads = tf.reduce_mean(
+                [finalreward * allgrads[step][varindex]
+                for step, finalreward in enumerate(finalrewards)], axis=0)
+            allmeangrads.append(meangrads)
+        optimizer.apply_gradients(zip(allmeangrads, model.trainable_variables))
+    model.save(newmodelname)
 
-trained_model = keras.models.load_model("henrieke_model")
 
-runtest(trained_model, 10**4)
+testmodel = loadmodel
+test_model = keras.models.load_model(newmodelname)
+
+runtest(test_model, 10**4)
 
 
 # todo:

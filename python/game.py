@@ -16,7 +16,6 @@ class Player:
             card = random.choice(self.cards)
         elif self.strategy == "human":
             card = self.getcardinput()
-            print(card)
         elif self.strategy == "trainai":
             pass
         elif self.strategy == "bea":
@@ -26,7 +25,7 @@ class Player:
                 card = random.choice([0, 4])
             else:
                 card = np.max(self.cards)
-        elif self.smodelnametrategy == "niklas":
+        elif self.strategy == "niklas":
             if np.random.random() < 0.25:
                 card = 1
             else:
@@ -215,9 +214,9 @@ class Game:
         for player in self.players:
             if player.crowns >= self.crownstowin:
                 return player
-            else:
-                newplayer = Player("tie") # workaround to have a pseudo winner in case of a tie
-                return newplayer
+        
+        newplayer = Player("tie") # workaround to have a pseudo winner in case of a tie
+        return newplayer
 
 
 
