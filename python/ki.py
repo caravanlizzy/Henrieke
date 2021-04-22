@@ -194,26 +194,28 @@ def runtest(model, ngames = 100): # play #ngames and print the win percentage of
     print("\n" + str(wins["tie"]/ngames * 100) + "% of the games ended tie.")
     
 trainmodel = True
-# loop to actually train the model
-if trainmodel:
-    if loadmodel:
-        model = keras.models.load_model(loadmodelname)
-    for i in tqdm.tqdm(range(ngames), desc="Progress"):
-        # print("\nGame # " + str(i))
-        allrewards, allgrads = playonegame(model, maxrounds, nplayers)
-        finalrewards = normalizerewards(allrewards)
-        allmeangrads = []
-        for varindex in range(len(model.trainable_variables)):
-            meangrads = tf.reduce_mean(
-                [finalreward * allgrads[step][varindex]
-                for step, finalreward in enumerate(finalrewards)], axis=0)
-            allmeangrads.append(meangrads)
-        optimizer.apply_gradients(zip(allmeangrads, model.trainable_variables))
-    model.save(newmodelname)
+
+def trainmodel(model = model, loadmodel = loadmodel, loadmodelname = loadmodelname, ngames = ngames, maxrounds = maxrounds, nplayers = nplayers):
+    # loop to actually train the model
+    if trainmodel:
+        if loadmodel:
+            model = keras.models.load_model(loadmodelname)
+        for i in tqdm.tqdm(range(ngames), desc="Progress"):
+            # print("\nGame # " + str(i))
+            allrewards, allgrads = playonegame(model, maxrounds, nplayers)
+            finalrewards = normalizerewards(allrewards)
+            allmeangrads = []
+            for varindex in range(len(model.trainable_variables)):
+                meangrads = tf.reduce_mean(
+                    [finalreward * allgrads[step][varindex]
+                    for step, finalreward in enumerate(finalrewards)], axis=0)
+                allmeangrads.append(meangrads)
+            optimizer.apply_gradients(zip(allmeangrads, model.trainable_variables))
+        model.save(newmodelname)
+        return model
 
 
-testmodel = loadmodel
-test_model = keras.models.load_model(newmodelname)
+
 
 runtest(test_model, 10**4)
 
