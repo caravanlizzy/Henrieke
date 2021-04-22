@@ -1,6 +1,5 @@
 #%%
 import game 
-
 ### script to play a game 
 
 game = game.Game()
@@ -20,3 +19,5 @@ game.startgame()
 # %%
 
 
+
+# %%
