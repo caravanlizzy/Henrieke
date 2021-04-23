@@ -22,11 +22,9 @@ rewards = {
 
 
 # new ai settings
-trainmodel = False
 newmodelname = "zerobase_deep_model"
 
 # previous ai settings
-loadmodel = False
 loadmodelname = "henrieke_model"
 
 
@@ -134,7 +132,7 @@ def playround(game, model): # play a single round (each participants plays 1 car
     return game, grads, reward
 
 
-def playonegame(model, maxrounds, nplayers): # play many rounds until either 1 player wins or #maxrounds rounds have been played
+def playonegame(model, maxrounds, nplayers): # play rounds until either 1 player wins or #maxrounds rounds have been played
     game = setupgame(nplayers)
     game.startgame()
     allrewards = []
@@ -145,7 +143,7 @@ def playonegame(model, maxrounds, nplayers): # play many rounds until either 1 p
             allrewards.append(reward)
             allgrads.append(grads)
             if(reward == -100):
-                break #abort game since an invalid card has been played
+                break #abort game since an invalid card has been played by ai
         else:
             break
     return allrewards, allgrads
@@ -193,31 +191,31 @@ def runtest(model, ngames = 100): # play #ngames and print the win percentage of
         print("\n" + str(p) + " wins: " +str(wins[p]) + " times. -> " + str(wins[p]/ngames*100.0) + "%")
     print("\n" + str(wins["tie"]/ngames * 100) + "% of the games ended tie.")
     
-trainmodel = True
 
-def trainmodel(model = model, loadmodel = loadmodel, loadmodelname = loadmodelname, ngames = ngames, maxrounds = maxrounds, nplayers = nplayers):
+
+def trainmodel(model = model, ngames = ngames, maxrounds = maxrounds, nplayers = nplayers):
     # loop to actually train the model
-    if trainmodel:
-        if loadmodel:
-            model = keras.models.load_model(loadmodelname)
-        for i in tqdm.tqdm(range(ngames), desc="Progress"):
-            # print("\nGame # " + str(i))
-            allrewards, allgrads = playonegame(model, maxrounds, nplayers)
-            finalrewards = normalizerewards(allrewards)
-            allmeangrads = []
-            for varindex in range(len(model.trainable_variables)):
-                meangrads = tf.reduce_mean(
-                    [finalreward * allgrads[step][varindex]
-                    for step, finalreward in enumerate(finalrewards)], axis=0)
-                allmeangrads.append(meangrads)
-            optimizer.apply_gradients(zip(allmeangrads, model.trainable_variables))
-        model.save(newmodelname)
-        return model
+    # if trainmodel:
+        # if loadmodel:
+        #     model = keras.models.load_model(loadmodelname)
+    for i in tqdm.tqdm(range(ngames), desc="Progress"):
+        # print("\nGame # " + str(i))
+        allrewards, allgrads = playonegame(model, maxrounds, nplayers)
+        finalrewards = normalizerewards(allrewards)
+        allmeangrads = []
+        for varindex in range(len(model.trainable_variables)):
+            meangrads = tf.reduce_mean(
+                [finalreward * allgrads[step][varindex]
+                for step, finalreward in enumerate(finalrewards)], axis=0)
+            allmeangrads.append(meangrads)
+        optimizer.apply_gradients(zip(allmeangrads, model.trainable_variables))
+    model.save(newmodelname)
+    return model
 
 
 
-
-runtest(test_model, 10**4)
+testmodel = keras.models.load_model(loadmodelname)
+runtest(testmodel, 10**4)
 
 
 # todo:

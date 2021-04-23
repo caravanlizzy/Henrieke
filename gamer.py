@@ -1,7 +1,7 @@
 import random 
 import numpy as np
 from collections import Counter
-import player
+import player 
 
 class Game:
     def __init__(self):
@@ -11,21 +11,13 @@ class Game:
         self.verbose = False
         self.trainai = False
         self.gamestate = "idle"
-        self.showgames = False
-        # self.wrongpickpercentage = 0 #for now only working with 1 ai being trained
 
-    def addplayer(self, name, strategy = "randombot", aimodel = False):
-        newplayer = player.Player(name)
-        newplayer.game = self  
-        newplayer.strategy = strategy
-        self.players.append(newplayer)
-
-    def addai(self, name, model):
-        ai = player.Player("ai")
-        ai.game = self
-        ai.strategy = "ai"
-        ai.loadmodel(model)
-        self.players.append(ai)
+    def addplayer(self, name, human = False):
+        player = player.Player(name)
+        player.game = self
+        if human:
+            player.strategy = "human"
+        self.players.append(player)
 
     def reset(self):
         self.round = 0
@@ -77,7 +69,7 @@ class Game:
         if self.verbose:
             print("Welcome to Henriekow! Good luck.")
 
-    def startgame(self): #return value is a bad choice for now
+    def startgame(self):
         self.initgame()
         if self.trainai:
             return
@@ -89,7 +81,7 @@ class Game:
             return self.findwinner()
 
 
-    def runround(self, cards = [0]*9): # play a complete round, (each player plays 1 card), the optional parameter "cards" allow to input specific inputs (i.e. to process ai output )
+    def runround(self, cards = [0]*9): #the optional parameter "cards" allow to input specific inputs (i.e. to process ai output )
         self.round += 1 
         playedcards = cards[:len(self.players)]
         for i, player in enumerate(self.players): 
@@ -102,10 +94,14 @@ class Game:
         self.updateplayers(roundresults, playedcards) # update player cards and crowns
         self.checkwin()
         return roundresults
+    
+    def getwrongpickcount(self):
+        wrongpicks = []
+        for player in self.players:
+            wrongpicks.append(player.wrongpicks)
+        return wrongpicks
 
-    # def setwrongpickpercentage(self, player):
-    #     self.wrongpickpercentage = player.wrongwicks/self.round * 100
-
+    
 
     def gamestatetoaiinput(self): # function to extract the model input info from the game
         allinputs = []
@@ -131,23 +127,21 @@ class Game:
 
 
     def getroundresults(self, playedcards):
-        roundresults = ["loss"] * len(playedcards)
-        if self.showgames:
-            print(playedcards)
+        rr = ["loss"] * len(playedcards)
         highestcard = max(playedcards)
         occurence = Counter(playedcards)[highestcard]
         if occurence == 1:
             index = playedcards.index(highestcard)
-            roundresults[index] = "win"
+            rr[index] = "win"
         else:
-            for i in range(len(roundresults)):
+            for i in range(len(rr)):
                 if(playedcards[i] == highestcard):
-                    roundresults[i] = "tie"
-        return roundresults
+                    rr[i] = "tie"
+        return rr
 
     def findwinner(self):
-        for p in self.players:
-            if p.crowns >= self.crownstowin:
-                return p
-        newp = player.Player("tie") # newplayer stands for a pseudo winner in case of a tie
-        return newp
+        for player in self.players:
+            if player.crowns >= self.crownstowin:
+                return player
+        newplayer = Player("tie") # newplayer stands for a pseudo winner in case of a tie
+        return newplayer
