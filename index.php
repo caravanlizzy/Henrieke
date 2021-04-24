@@ -7,8 +7,6 @@
     Henrieke
 </title>
 
-
-
 </head>
 
 
@@ -20,12 +18,15 @@
 <!--
 
 -->
+<link rel="stylesheet" href="style.css" type="text/css">
+<script src="js/graphic.js">
+</script>
 <body>
 
 
 <?php
 
-require 'game.php';
+require 'php/game.php';
 
 $game = new Game();
 $game->addplayer("bea");
@@ -34,7 +35,10 @@ $game->addplayer("hugo");
 $game->startgame();
 
 ?>
-
+<script>
+    let a = new Graphic();
+    a.drawmainframe();
+</script>
 
 </body>
 </html>

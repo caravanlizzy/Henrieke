@@ -1,53 +1,6 @@
 <?php
 
-class Player{
-    public $name;
-    public $cards;
-    public $crowns;
-    public $strategy;
-
-    function __construct($name) {
-        $this->name = $name;
-        $this->cards = range(0, 10);
-        $this->crowns = 0;
-        $this->strategy = "random";
-    }
-
-    function playcard() {
-        if ($this->strategy == "random") {
-            $card = array_rand($this->cards);
-        }
-        return $card;
-    }
-
-    function removehighestcards($amount = 1) {
-        for($i = 0; $i < $amount; $i++) {
-            if ($this->cards[-1] != 0) {
-                array_pop($this->cards);
-            }
-        }
-    }
-
-    function removecard($card) {
-        $index = array_search($card, $this->cards);
-        if ($index != 0) {
-            array_splice($this->cards, $index);
-        }
-    }
-
-    function addcrown() {
-        $this->crowns += 1;
-    }
-
-    function changename($newname) {
-        $this->name = $newname;
-    }
-
-    function reset() {
-        $this->cards = range(0, 10);
-        $this->crowns = 0;
-    }
-}
+require 'player.php';
 
 class Game{
     function __construct() {
@@ -60,7 +13,7 @@ class Game{
     function addplayer($name, $human = false) {
         $player = new Player($name);
         if($human) {
-            $player->strategy = "human";
+            $player->stratergy = "human";
         }
         array_push($this->players, $player);
     }
@@ -74,7 +27,9 @@ class Game{
             print_r($this->players[$i]->name);
             echo " played :";
             print_r($playedcards[$i]);
+            echo "<br>";
         }
+        echo "<br>";
     }
 
     function updateplayers($roundresults, $playedcards) {
@@ -118,7 +73,7 @@ class Game{
         } else{
             $this->crownstowin = 2;
         }
-        echo "Welcome to Henriekow! Good luck.\r\n";
+        print("Welcome to Henriekow! Good luck.\r\n <br>");
         $gameover = $this->checkwin();
         while ($gameover == false){
             $this->runround();
