@@ -21,8 +21,8 @@ class Graphic {
         this.drawplayerinfo(playerid, "testname");
         this.drawcardsbox(playerid);
         this.drawdiscardbox(playerid);
-        this.drawcrownsbox(playerid);
         this.drawcarddisplaybox(playerid);
+        this.drawcrownsbox(playerid);
     }
 
     getplayertableau(playerid) {
@@ -49,16 +49,51 @@ class Graphic {
         this.drawbox("nonzerobox", "nonzerobox" + playerid, cardbox);
     }
 
+    drawcard(playerid, card, color) {
+        let classname = "card";
+        let id = classname + card + "p" + playerid;
+        let c = 0;
+        if (card == 0) {
+            c = this.drawbox(classname + " " + color + " " + "big", id, document.getElementById("zerobox" + playerid)); 
+        }
+        else {
+            c = this.drawbox(classname + " " + color + " " + "small", id, document.getElementById("nonzerobox" + playerid)); 
+        }
+        console.log(c.id);
+        c.innerHTML = card;
+    }
+
+    deletecard(playerid, card) {
+        let id = "card" + card + "p" + playerid;
+        let c = document.getElementById(id);
+        c.parentNode.removeChild(c);
+    }
+
     drawdiscardbox(playerid) {
         let classname = "discardbox";
-        let discardbox = this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
-        
+        this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
+    }
+
+    drawdiscard(playerid, card, color) {
+        let classname = "discard";
+        let id = classname + card + "p" + playerid;
+        let c = this.drawbox(classname + " " + color + " " + "small", id, document.getElementById("discardbox" + playerid));
+        c.innerHTML = card;
+    }
+
+    deletediscard(playerid, discard) {
+        let id = "discard" + discard + "p" + playerid;
+        let dc = document.getElementById(id);
+        dc.parentNode.removeChild(dc); 
     }
 
     drawcrownsbox(playerid) {
         let classname = "crownbox";
         this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
+    }
 
+    updatecrowns(playerid, crowns) {
+        document.getElementById("crownbox" + playerid).innerHTML = crowns;
     }
 
     drawcarddisplaybox(playerid) {
@@ -66,26 +101,13 @@ class Graphic {
         this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
     }
 
+
+
     drawboards(players) {
         for (let i = 0; i < players; i++) {
             this.drawplayertableau(i);
         }
     }
 
-    drawcard(playerid, card, color) {
-        let classname = "card";
-        let id = classname + card + "p" + playerid;
-        if (card == 0) {
-            c = this.drawbox(classname + " " + color, id, document.getElementById("zerobox" + playerid)); 
-        }
-        else {
-            c = this.drawbox(classname + " " + color, id, document.getElementById("nonzerobox" + playerid)); 
-        }
-        c.innerHTML = card;
-    }
-
-    deletecard(playerid, card) {
-        return
-    }
 
 }

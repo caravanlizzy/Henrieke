@@ -19,6 +19,7 @@
     width: 475px;
     height: 250px;
     border: 1px solid blue;
+    border-radius: 5px;
     margin: 21px;
     padding: 10px;
     display: flex;
@@ -35,54 +36,92 @@
 
 .crownbox {
     border: 1px solid gold;
+    background-color: gold;
+    border-radius: 20px;
     width: 80px;
     height: 80px;
     margin: 5px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 35px;
+    align-self:flex-end;
 }
 
 .cardbox {
-    width: 300px;
-    height: 80px;
+    width: 270px;
+    height: 100px;
     border: 1px solid brown;
     margin: 5px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
 }
 
 .discardbox {
-    width: 250px;
-    height: 80px;
+    width: 180px;
+    height: 100px;
     border: 1px solid lime;
     margin: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 2px;
+}
+
+.discard {
+    border: 1px solid black;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin: 2px;
 }
 
 .carddisplaybox {
-    border: 1px solid green;
-    width: 80px;
-    height: 120px;
+    border: 3px solid rgb(54, 54, 54);
+    width: 70px;
+    height: 100px;
     margin: 5px;
 }
 
 .zerobox {
-    width: 80px;
-    height: 80px;
-    border: 1px solid black;
+    width: 70px;
+    height: 82px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
 }
 
 .nonzerobox {
-    width: 220px;
-    height: 80px;
-    border: 1px solid black;
+    width: 230px;
+    height: 100px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
-.bigcard {
-    width: 50px;
-    height: 70px;
+.card {
     border: 1px solid black;
+    border-radius: 5px;
+    /* text-align: center; */
+    align-items: center;
+    display:flex;
+    justify-content: space-around;
+    margin: 1px 5px;
 }
 
-.smallcard {
-    width: 25px;
-    height: 35px;
-    border: 1px solid black;
+
+
+.big {
+    width: 45px;
+    height: 67.5px;
+    font-size: 50px;
+}
+
+.small {
+    width: 30px;
+    height: 42px;
+    font-size: 25px;
 }
 
 .green {
