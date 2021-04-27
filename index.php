@@ -23,6 +23,11 @@
 </script>
 <body>
 
+<script>
+    let a = new Graphic();
+    a.drawmainframe();
+    a.drawboards(4);
+</script>
 
 <?php
 
@@ -35,10 +40,7 @@ $game->addplayer("hugo");
 $game->startgame();
 
 ?>
-<script>
-    let a = new Graphic();
-    a.drawmainframe();
-</script>
+
 
 </body>
 </html>

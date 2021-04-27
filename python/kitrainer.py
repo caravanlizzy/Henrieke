@@ -25,14 +25,12 @@ rewards = {
 # new ai settings
 newmodelname = "anyopponentai"
 
-# previous ai settings
-badai = "henrieke_model"
-decentai = "zerobase_deep_model"
+
 
 
 #training parameters
 nplayers = 5
-ngames = 10**6
+ngames = 2*10**6
 maxrounds = 35
 learningrate = 0.01
 optimizer = keras.optimizers.Adam(lr=learningrate)
@@ -42,6 +40,14 @@ wrongpicks = 0
 
 #available strats to train against:
 strategies = ["randombot", "beabot", "niklasbot", "henrieke", "ausweglos", "ai"]
+
+#load availabe ai models to train against 
+trainedais = {
+    "henrieke_ai" : keras.models.load_model("henrieke_model", compile=False),
+    "zerobase_ai" : keras.models.load_model("zerobase_model", compile=False),
+    "zerobase_deep_ai" : keras.models.load_model("zerobase_deep_model", compile=False)
+}
+
 
 
 # define input shape
@@ -110,12 +116,13 @@ def setupgame(playernum): # setup a game with training settings
     newgame.addplayer(newmodelname)
     for i in range(playernum-1):
         playerstrategy = drawrandomstrategy()
-        # print(playerstrategy)
+    #     # print(playerstrategy)
         if playerstrategy == "ai":
-            model = keras.models.load_model(decentai)
+            model = trainedais["zerobase_deep_ai"]
             newgame.addai(playerstrategy + str(i), model)
         else:
             newgame.addplayer(playerstrategy+str(i), playerstrategy)   
+        # newgame.addplayer("randombot" + str(random.choice([1,2,3,4,5,6,7,8,9])))   
     return newgame
 
 def getkireward(game, roundresult, rewards): #get the rewards for a given roundresult
@@ -159,7 +166,7 @@ def playonegame(model, maxrounds, nplayers): # play rounds until either 1 player
             game, grads, reward = playround(game, model)
             allrewards.append(reward)
             allgrads.append(grads)
-            if(reward == -100):
+            if(reward == rewards["fail"]):
                 break #abort game since an invalid card has been played by ai
         else:
             break
@@ -184,7 +191,7 @@ def createrandomgamestate(nplayers): # return an arbitrary gamestate (not won ye
 
 c = createrandomgamestate # for quick access
 
-def playtestgame(model, playernames): # play a complete game - by default against random kis with the trained ai in seat 1
+def testgame(model, playernames): # play a complete game - by default against random kis with the trained ai in seat 1
     game = cardgame.Game()
     for player in playernames:
         strategy = drawrandomstrategy(False)
@@ -206,14 +213,11 @@ def runtest(model, ngames = 100): # play #ngames and print the win percentage of
         wins.update({name : 0})
     wins.update({"tie": 0})
     for k in tqdm.tqdm(range(ngames), desc="Progress"):
-        gamefinal = playtestgame(model, playernames)
+        gamefinal = testgame(model, playernames)
         winner = gamefinal.findwinner()
         wins[winner.name] += 1
         wrongpickpercentage.append(gamefinal.players[0].wrongpicks*100/gamefinal.round)
     showteststats(wins, wrongpickpercentage, ngames)
-    # for p  in playernames:
-    #     print("\n" + str(p) + " wins: " +str(wins[p]) + " times. -> " + str(wins[p]/ngames*100.0) + "%")
-    # print("\n" + str(wins["tie"]/ngames * 100) + "% of the games ended tie.")
 
 
 def showteststats(wins, wrongpickpercentage, ngames):
@@ -225,10 +229,6 @@ def showteststats(wins, wrongpickpercentage, ngames):
     
 
 def trainmodel(model = model, ngames = ngames, maxrounds = maxrounds, nplayers = nplayers):
-    # loop to actually train the model
-    # if trainmodel:
-        # if loadmodel:
-        #     model = keras.models.load_model(loadmodelname)
     for i in tqdm.tqdm(range(ngames), desc="Progress"):
         # print("\nGame # " + str(i))
         allrewards, allgrads = playonegame(model, maxrounds, nplayers)
