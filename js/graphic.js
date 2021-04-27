@@ -1,9 +1,9 @@
-class Graphic{
-    constructor(){
+class Graphic {
+    constructor() {
         this.playertableaus = [];
     }
 
-    drawbox(classname, id, parente){
+    drawbox(classname, id, parente) {
         let box = document.createElement("div");
         box.className = classname;
         box.id = id;
@@ -11,11 +11,11 @@ class Graphic{
         return box;
     }
 
-    drawmainframe(){
+    drawmainframe() {
         this.drawbox("mainframe", "mainframe", document.body);
     }
 
-    drawplayertableau(playerid){
+    drawplayertableau(playerid) {
         let playertableau = this.drawbox("playertableau", "playertableau" + playerid, document.getElementById("mainframe"));
         this.playertableaus.push(playertableau);
         this.drawplayerinfo(playerid, "testname");
@@ -25,11 +25,11 @@ class Graphic{
         this.drawcarddisplaybox(playerid);
     }
 
-    getplayertableau(playerid){
+    getplayertableau(playerid) {
         return document.getElementById("playertableau" + playerid);
     }
 
-    drawplayerinfo(playerid, name){
+    drawplayerinfo(playerid, name) {
         let classname = "playerinfo";
         let playerinfo = this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
         let textbox = document.createElement("div");
@@ -37,41 +37,55 @@ class Graphic{
         playerinfo.append(textbox);
     }
 
-    updateplayerinfo(playerid, newname){
+    updateplayerinfo(playerid, newname) {
         let playerinfo = document.getElementById("playerinfo" + playerid);
         playerinfo.innerHTML = newname;
     }
 
-    drawcardsbox(playerid){
+    drawcardsbox(playerid) {
         let classname = "cardbox";
-        this.drawbox(classname, classname+playerid, this.getplayertableau(playerid));
+        let cardbox = this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
+        this.drawbox("zerobox", "zerobox" + playerid, cardbox);
+        this.drawbox("nonzerobox", "nonzerobox" + playerid, cardbox);
     }
 
-    drawdiscardbox(playerid){
+    drawdiscardbox(playerid) {
         let classname = "discardbox";
-        this.drawbox(classname, classname+playerid, this.getplayertableau(playerid));
+        let discardbox = this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
+        
     }
 
-    drawcrownsbox(playerid){
+    drawcrownsbox(playerid) {
         let classname = "crownbox";
-        this.drawbox(classname, classname+playerid, this.getplayertableau(playerid));
+        this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
 
     }
 
-    drawcarddisplaybox(playerid){
+    drawcarddisplaybox(playerid) {
         let classname = "carddisplaybox";
-        this.drawbox(classname, classname+playerid, this.getplayertableau(playerid));
+        this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
     }
 
-    drawboards(players){
-        for( let i = 0; i < players; i++){
+    drawboards(players) {
+        for (let i = 0; i < players; i++) {
             this.drawplayertableau(i);
         }
     }
 
-    drawcard(playerid, card, parent, color){
-        classname = "card";
+    drawcard(playerid, card, color) {
+        let classname = "card";
         let id = classname + card + "p" + playerid;
-        card = this.drawbox(classname, id, parent);
+        if (card == 0) {
+            c = this.drawbox(classname + " " + color, id, document.getElementById("zerobox" + playerid)); 
+        }
+        else {
+            c = this.drawbox(classname + " " + color, id, document.getElementById("nonzerobox" + playerid)); 
+        }
+        c.innerHTML = card;
     }
+
+    deletecard(playerid, card) {
+        return
+    }
+
 }
