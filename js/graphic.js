@@ -101,10 +101,9 @@ class Graphic {
         this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
     }
 
-
-
     drawboards(players) {
-        for (let i = 0; i < players; i++) {
+        let nplayers = players.length;
+        for (let i = 0; i < nplayers; i++) {
             this.drawplayertableau(i);
         }
     }

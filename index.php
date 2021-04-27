@@ -21,6 +21,10 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <script src="js/graphic.js">
 </script>
+<script src="js/player.js">
+</script>
+<script src="js/game.js">
+</script>
 <body>
 
 <script>
