@@ -30,7 +30,7 @@
 <script>
     let a = new Graphic();
     a.drawmainframe();
-    a.drawboards(4);
+    a.drawboards([1,2,3,4]);
 </script>
 
 <?php

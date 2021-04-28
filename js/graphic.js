@@ -52,14 +52,8 @@ class Graphic {
     drawcard(playerid, card, color) {
         let classname = "card";
         let id = classname + card + "p" + playerid;
-        let c = 0;
-        if (card == 0) {
-            c = this.drawbox(classname + " " + color + " " + "big", id, document.getElementById("zerobox" + playerid)); 
-        }
-        else {
-            c = this.drawbox(classname + " " + color + " " + "small", id, document.getElementById("nonzerobox" + playerid)); 
-        }
-        console.log(c.id);
+        let parentboxname = (card == 0 ? "zerobox" : "nonzerobox");
+        let c = this.drawbox(classname + " " + color + " " + "small", id, document.getElementById(parentboxname + playerid)); 
         c.innerHTML = card;
     }
 
