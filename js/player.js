@@ -14,8 +14,8 @@ class Player{
         this.host = false;
     }
 
-    setname(newname) {
-        this.name = newname;
+    setname(newName) {
+        this.name = newName;
     }
 
     addcrown() {

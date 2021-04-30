@@ -5,16 +5,13 @@ require 'player.php';
 class Game{
     function __construct() {
         $this->players = [];
-        $this->crownstowin = 2;
+        $this->crownsToWin = 2;
         $this->round = 0;
         $this->verbose = true;
     }
 
-    function addplayer($name, $human = false) {
-        $player = new Player($name);
-        if($human) {
-            $player->stratergy = "human";
-        }
+    function addPlayer($name, $strategy = "randomBot") {
+        $player = new Player($name, $this, $strategy);
         array_push($this->players, $player);
     }
 
@@ -22,103 +19,137 @@ class Game{
         $this->round = 0;
     }
 
-    function printroundresults($roundresults, $playedcards) {
+    function printRoundResults($roundResults, $playedCards) {
         for($i = 0; $i < count($this->players); $i++) {
             print_r($this->players[$i]->name);
             echo " played :";
-            print_r($playedcards[$i]);
+            print_r($playedCards[$i]);
             echo "<br>";
         }
         echo "<br>";
     }
 
-    function updateplayers($roundresults, $playedcards) {
-        for($i = 0; $i < count($roundresults); $i++) {
-            $roundresult = $roundresults[$i];
+    function updatePlayers($roundResults, $playedCards) {
+        for($i = 0; $i < count($roundResults); $i++) {
+            $roundResult = $roundResults[$i];
             $cards; // number of cards to remove at the end of the round
-            if($roundresult == "win") {
-                $cards = $playedcards[$i] - 1;
-                $this->players[$i]->crowns += 1;
-                $this->players[$i]->removehighestcards($cards);
-            } else if($roundresult == "loss") {
-                $cards = $playedcards[$i];
-                $this->players[$i]->removehighestcards($cards);
+            if($roundResult == "win") {
+                $this->updateWinner($i, $playedCards);
+            } else if($roundResult == "loss") {
+                $this->updateLoser($i, $playedCards);
             } else{
-                $playedcard = $playedcards[$i];
-                $this->players[$i]->removecard($playedcard);
+                $this->updateTier($i, $playedCards);
             }
         }
         if ($this->verbose) {
-            $this->printroundresults($roundresults, $playedcards);
+            $this->printRoundResults($roundResults, $playedCards);
         }
     }
 
-    function checkwin() {
+    function updateWinner($playerIndex, $playedCards) {
+        $cards = $playedCards[$playerIndex] - 1;
+        $this->players[$playerIndex]->crowns += 1;
+        $this->players[$playerIndex]->removeHighestCards($cards);
+    }
+
+    function updateLoser($playerIndex, $playedCards) {
+        $cards = $playedCards[$playerIndex];
+        $this->players[$playerIndex]->removeHighestCards($cards);  
+    }
+
+    function updateTier($playerIndex, $playedCards) {
+        $card = $playedCards[$playerIndex];
+        $this->players[$playerIndex]->removecard($card);
+    }
+
+    function checkOver() {
         for($i = 0; $i < count($this->players); $i++) {
             $player = $this->players[$i];
-            if($player->crowns >= $this->crownstowin) {
+            if($player->crowns >= $this->crownsToWin) {
                 return true;
             }
+        }
+        if($this->round > 25) {
+            return true;
         }
         return false;
     }
 
-    function startgame() {
-        $this->reset();
-        $nplayers = count($this->players);
-        if($nplayers < 2){
-            echo "Not enough players \r\n";
-        } else if( $nplayers == 2) {
-            $this->crownstowin = 3;
-        } else{
-            $this->crownstowin = 2;
-        }
+    function start() {
+        $this->prepareGame();
         print("Welcome to Henriekow! Good luck.\r\n <br>");
-        $gameover = $this->checkwin();
-        while ($gameover == false){
-            $this->runround();
-            $gameover = $this->checkwin();
+        $gameOver = $this->checkOver();
+        while ($gameOver == false){
+            $this->runRound();
+            $gameOver = $this->checkOver();
         }
-        print_r($this->findwinner()->name);
-        echo " wins the game!";
+        if($this->findWinner() == false) {
+            echo "Game is tied.";
+        }
+        else{
+            print_r($this->findWinner()->name);
+            echo " wins the game!";
+        }
     }
 
-    function runround() {
+    function prepareGame() {
+        $this->reset();
+        $this->setWinCondition();
+    }
+
+    function setWinCondition() {
+        $nPlayers = count($this->players);
+        if($nPlayers < 2){
+            echo "Not enough players \r\n";
+        } else if( $nPlayers == 2) {
+            $this->crownsToWin = 3;
+        } else{
+            $this->crownsToWin = 2;
+        }
+    }
+
+    function runRound() {
+        $playedCards = $this->getPlayedCards();
+        $roundResults = $this->getroundResults($playedCards);
+        $this->updatePlayers($roundResults, $playedCards);
         $this->round += 1;
-        $playedcards = [];
-        foreach($this->players as $player) {
-            array_push($playedcards, $player->playcard());
-        }
-        $roundresults = $this->getroundresults($playedcards);
-        $this->updateplayers($roundresults, $playedcards);
     }
 
-    function getroundresults($playedcards) {
-        $roundresults = [];
-        foreach($playedcards as $p) {
-            array_push($roundresults, "loss");
+    function getPlayedCards() {
+        $playedCards = [];
+        foreach($this->players as $player) {
+            array_push($playedCards, $player->playcard());
         }
-        $highestcard = max($playedcards);
-        $occurence = array_count_values($playedcards)[$highestcard];
+        return $playedCards;
+    }
+
+    function getroundResults($playedCards) {
+        $roundResults = [];
+        foreach($playedCards as $p) {
+            array_push($roundResults, "loss");
+        }
+        $highestCard = max($playedCards);
+        $occurence = array_count_values($playedCards)[$highestCard];
         if($occurence == 1) {
-            $index = array_search($highestcard, $playedcards);
-            $roundresults[$index] = "win";
+            $index = array_search($highestCard, $playedCards);
+            $roundResults[$index] = "win";
         } else {
-            for($i = 0; $i < count($roundresults); $i++) {
-                if($playedcards[$i] == $highestcard) {
-                    $roundresults[$i] = "tie";
+            for($i = 0; $i < count($roundResults); $i++) {
+                if($playedCards[$i] == $highestCard) {
+                    $roundResults[$i] = "tie";
                 }
             }
         }
-        return $roundresults;
+        return $roundResults;
     }
 
-    function findwinner() {
+    function findWinner() {
         foreach($this->players as $player) {
-            if($player->crowns >= $this->crownstowin) {
+            if($player->crowns >= $this->crownsToWin) {
                 return $player;
             }
         }
+        return false;
     }
 }
 

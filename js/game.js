@@ -4,11 +4,12 @@ class Game{
         this.graphic = new Graphic();
     }
 
-    addplayer(name) {
-        let newplayer = new Player(name);
+    addPlayer(name) {
+        let newPlayer = new Player(name);
     }
 
-    setupgraphic() {
-        this.graphic.drawmainframe();
+    setupGraphic() {
+        this.graphic.drawMainFrame();
+        this.graphic.drawStatusBar();
     }
 }

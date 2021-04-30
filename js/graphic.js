@@ -1,105 +1,111 @@
 class Graphic {
-    // constructor() {
-    //     this.playertableaus = [];
-    // }
-    drawbox(classname, id, parente) {
+
+    drawBox(className, id, parente) {
         let box = document.createElement("div");
-        box.className = classname;
+        box.className = className;
         box.id = id;
         parente.append(box);
         return box;
     }
 
-    drawmainframe() {
-        this.drawbox("mainframe", "mainframe", document.body);
+    drawMainFrame() {
+        this.drawBox("mainFrame", "mainFrame", document.body);
     }
 
-    drawplayertableau(playerid) {
-        let playertableau = this.drawbox("playertableau", "playertableau" + playerid, document.getElementById("mainframe"));
-        this.playertableaus.push(playertableau);
-        this.drawplayerinfo(playerid, "testname");
-        this.drawcardsbox(playerid);
-        this.drawdiscardbox(playerid);
-        this.drawcarddisplaybox(playerid);
-        this.drawcrownsbox(playerid);
+    getMainFrame() {
+        return document.getElementById("mainFrame");
     }
 
-    getplayertableau(playerid) {
-        return document.getElementById("playertableau" + playerid);
+    drawPlayerTableau(playerId) {
+        let playerTableau = this.drawBox("playerTableau", "playerTableau" + playerId, this.getMainFrame());
+        // this.playerTableaus.push(playerTableau);
+        this.drawPlayerInfo(playerId, "testname");
+        this.drawCardsBox(playerId);
+        this.drawDiscardBox(playerId);
+        this.drawCardDisplayBox(playerId);
+        this.drawCrownsBox(playerId);
     }
 
-    drawplayerinfo(playerid, name) {
-        let classname = "playerinfo";
-        let playerinfo = this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
-        let textbox = document.createElement("div");
-        textbox.innerHTML = name;
-        playerinfo.append(textbox);
+    getPlayerTableau(playerId) {
+        return document.getElementById("playerTableau" + playerId);
     }
 
-    updateplayerinfo(playerid, newname) {
-        let playerinfo = document.getElementById("playerinfo" + playerid);
-        playerinfo.innerHTML = newname;
+    drawPlayerInfo(playerId, name) {
+        let className = "playerInfo";
+        let playerInfo = this.drawBox(className, className + playerId, this.getPlayerTableau(playerId));
+        let textBox = document.createElement("div");
+        textBox.innerHTML = name;
+        playerInfo.append(textBox);
     }
 
-    drawcardsbox(playerid) {
-        let classname = "cardbox";
-        let cardbox = this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
-        this.drawbox("zerobox", "zerobox" + playerid, cardbox);
-        this.drawbox("nonzerobox", "nonzerobox" + playerid, cardbox);
+    updateplayerInfo(playerId, newName) {
+        let playerInfo = document.getElementById("playerInfo" + playerId);
+        playerInfo.innerHTML = newName;
     }
 
-    drawcard(playerid, card, color) {
-        let classname = "card";
-        let id = classname + card + "p" + playerid;
-        let parentboxname = (card == 0 ? "zerobox" : "nonzerobox");
-        let c = this.drawbox(classname + " " + color + " " + "small", id, document.getElementById(parentboxname + playerid)); 
+    drawCardsBox(playerId) {
+        let className = "cardBox";
+        let cardBox = this.drawBox(className, className + playerId, this.getPlayerTableau(playerId));
+        this.drawBox("zeroBox", "zeroBox" + playerId, cardBox);
+        this.drawBox("nonZeroBox", "nonZeroBox" + playerId, cardBox);
+    }
+
+    drawcard(playerId, card, color) {
+        let className = "card";
+        let id = className + card + "p" + playerId;
+        let parentBoxName = (card == 0 ? "zeroBox" : "nonZeroBox");
+        let c = this.drawBox(className + " " + color + " " + "small", id, document.getElementById(parentBoxName + playerId)); 
         c.innerHTML = card;
     }
 
-    deletecard(playerid, card) {
-        let id = "card" + card + "p" + playerid;
+    deletecard(playerId, card) {
+        let id = "card" + card + "p" + playerId;
         let c = document.getElementById(id);
         c.parentNode.removeChild(c);
     }
 
-    drawdiscardbox(playerid) {
-        let classname = "discardbox";
-        this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
+    drawDiscardBox(playerId) {
+        let className = "discardBox";
+        this.drawBox(className, className + playerId, this.getPlayerTableau(playerId));
     }
 
-    drawdiscard(playerid, card, color) {
-        let classname = "discard";
-        let id = classname + card + "p" + playerid;
-        let c = this.drawbox(classname + " " + color + " " + "small", id, document.getElementById("discardbox" + playerid));
+    drawdiscard(playerId, card, color) {
+        let className = "discard";
+        let id = className + card + "p" + playerId;
+        let c = this.drawBox(className + " " + color + " " + "small", id, document.getElementById("discardBox" + playerId));
         c.innerHTML = card;
     }
 
-    deletediscard(playerid, discard) {
-        let id = "discard" + discard + "p" + playerid;
+    deletediscard(playerId, discard) {
+        let id = "discard" + discard + "p" + playerId;
         let dc = document.getElementById(id);
         dc.parentNode.removeChild(dc); 
     }
 
-    drawcrownsbox(playerid) {
-        let classname = "crownbox";
-        this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
+    drawCrownsBox(playerId) {
+        let className = "crownBox";
+        this.drawBox(className, className + playerId, this.getPlayerTableau(playerId));
     }
 
-    updatecrowns(playerid, crowns) {
-        document.getElementById("crownbox" + playerid).innerHTML = crowns;
+    updatecrowns(playerId, crowns) {
+        document.getElementById("crownBox" + playerId).innerHTML = crowns;
     }
 
-    drawcarddisplaybox(playerid) {
-        let classname = "carddisplaybox";
-        this.drawbox(classname, classname + playerid, this.getplayertableau(playerid));
+    drawCardDisplayBox(playerId) {
+        let className = "cardDisplayBox";
+        this.drawBox(className, className + playerId, this.getPlayerTableau(playerId));
     }
 
-    drawboards(players) {
+    drawBoards(players) {
         let nplayers = players.length;
         for (let i = 0; i < nplayers; i++) {
-            this.drawplayertableau(i);
+            this.drawPlayerTableau(i);
         }
     }
 
+    drawStatusBar() {
+        let className = "statusBar";
+        this.drawBox(className, className, this.getMainFrame())
+    }
 
 }

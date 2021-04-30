@@ -28,23 +28,24 @@
 <body>
 
 <script>
-    let a = new Graphic();
-    console.log(a)
-    a.drawmainframe();
-    a.drawboards([1,2,3,4]);
+    // let g = new Graphic();
+    // g.drawMainFrame();
+    // g.drawBoards([1,2,3,4]);
 </script>
 
 <?php
 require 'php/computeronly/game.php';
 
-function playcomputer() {
+function playComputer() {
     $game = new Game();
-    $game->addplayer("bea");
-    $game->addplayer("frank");
-    $game->addplayer("hugo");
-    $game->startgame();
+    $game->addPlayer("bea", "beaBot");
+    $game->addPlayer("niklas", "niklasBot");
+    $game->addPlayer("henrieke", "henriekeBot");
+    $game->addPlayer("ausweglos", "ausweglosBot");
+    $game->addPlayer("random", "randomBot");
+    $game->start();
 }
-
+playComputer();
 ?>
 
 
