@@ -34,14 +34,15 @@
 </script>
 
 <?php
+require 'php/computeronly/game.php';
 
-require 'php/game.php';
-
-$game = new Game();
-$game->addplayer("bea");
-$game->addplayer("frank");
-$game->addplayer("hugo");
-$game->startgame();
+function playcomputer() {
+    $game = new Game();
+    $game->addplayer("bea");
+    $game->addplayer("frank");
+    $game->addplayer("hugo");
+    $game->startgame();
+}
 
 ?>
 

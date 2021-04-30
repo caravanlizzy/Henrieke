@@ -8,14 +8,14 @@ class Player:
         self.game = None 
         self.cards = [i for i in range(11)]
         self.crowns = 0
-        self.strategy = "randombot"
-        self.aimodel = None
-        self.wrongpicks = 0
+        self.strategy = "randomBot"
+        self.aiModel = None
+        self.wrongPicks = 0
 
-    def playcard(self):
+    def playCard(self):
         return getattr(self, self.strategy)() #execute the given strategy 
         
-    def getcardinput(self):
+    def getCardInput(self):
         card = -1
         while card not in self.cards:
             print("Choose a card! Your cards are: " + str(self.cards))
@@ -23,12 +23,12 @@ class Player:
         else:
             return card
             
-    def removehighestcards(self, amount = 1):
+    def removeHighestCards(self, amount = 1):
         for i in range(amount):
             if(self.cards[-1] != 0):
                 self.cards.pop()
 
-    def removecard(self, card):
+    def removeCard(self, card):
         try:
             index = self.cards.index(card)
         except:
@@ -37,11 +37,11 @@ class Player:
             self.cards.pop(index)
         
 
-    def addcrown(self):
+    def addCrown(self):
         self.crowns += 1
     
-    def changename(self, newname):
-        self.name = newname
+    def changeName(self, newName):
+        self.name = newName
 
     def reset(self):
         self.cards = [i for i in range(11)]
@@ -49,15 +49,15 @@ class Player:
 
         
     #defining the different custom made strategies to train against
-    def randombot(self):
+    def randomBot(self):
         card = random.choice(self.cards)
         return card
 
     def human(self):
-        card = self.getcardinput()
+        card = self.getCardInput()
         return card
 
-    def beabot(self):
+    def beaBot(self):
         if self.game.round == 0:
             card = 0
         elif self.game.round == 1:
@@ -66,7 +66,7 @@ class Player:
             card = np.max(self.cards)
         return card
 
-    def niklasbot(self):
+    def niklasBot(self):
         if np.random.random() < 0.25:
             if 1 in self.cards:
                 card = 1
@@ -76,7 +76,7 @@ class Player:
             card = 0
         return card
 
-    def henrieke(self):
+    def henriekeBot(self):
         if self.game.round < 2:
             card = 0
         elif self.game.round == 2:
@@ -85,7 +85,7 @@ class Player:
             card = np.max(self.cards)
         return card
 
-    def ausweglos(self):
+    def ausweglosBot(self):
         if self.game.round < 4:
             card = 0
         elif self.game.round == 4:
@@ -94,15 +94,15 @@ class Player:
             card = np.max(self.cards) 
         return card
     
-    def ai(self):
-        modelin = self.game.gamestatetoaiinput()
-        modelout = self.aimodel(modelin)[0]
+    def ai(self): #access the ai 
+        modelin = self.game.gameStateToAiInput()
+        modelout = self.aiModel(modelin)[0]
         card = np.argmax(modelout)
         if card not in self.cards:
-            self.wrongpicks += 1
+            self.wrongPicks += 1
             card = random.choice(self.cards)
         return card  
 
-    def loadmodel(self, model):
-        self.aimodel = model
+    def loadModel(self, model): #load the ai
+        self.aiModel = model
 # %%

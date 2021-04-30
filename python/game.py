@@ -6,148 +6,138 @@ import player
 class Game:
     def __init__(self):
         self.players = []
-        self.crownstowin = 2
+        self.crownsToWin = 2
         self.round = 0
         self.verbose = False
-        self.trainai = False
-        self.gamestate = "idle"
-        self.showgames = False
+        self.trainAi = False
+        self.gameState = "idle"
+        self.showGames = False
         # self.wrongpickpercentage = 0 #for now only working with 1 ai being trained
 
-    def addplayer(self, name, strategy = "randombot", aimodel = False):
-        newplayer = player.Player(name)
-        newplayer.game = self  
-        newplayer.strategy = strategy
-        self.players.append(newplayer)
+    def addPlayer(self, name, strategy = "randomBot", aiModel = False):
+        newPlayer = player.Player(name)
+        newPlayer.game = self  
+        newPlayer.strategy = strategy
+        self.players.append(newPlayer)
 
-    def addai(self, name, model):
+    def addAi(self, name, model):
         ai = player.Player("ai")
         ai.game = self
         ai.strategy = "ai"
-        ai.loadmodel(model)
+        ai.loadModel(model)
         self.players.append(ai)
 
     def reset(self):
         self.round = 0
-        self.gamestate = "idle"
+        self.gameState = "idle"
 
-    def printroundresults(self, roundresults, playedcards):
-        print("roundresults:\n")
+    def printroundResults(self, roundResults, playedCards):
+        print("Roundresults:\n")
         for i, p in enumerate(self.players):
-            print(str(p.name) + " played: " + str(playedcards[i]) + " - crowns: " + str(self.players[i].crowns))
+            print(str(p.name) + " played: " + str(playedCards[i]) + " - crowns: " + str(self.players[i].crowns))
         print("\n")
 
-
-    def updateplayers(self, roundresults, playedcards):
-        for index, roundresult in enumerate(roundresults):
-            if roundresult == "win":
-                cards = playedcards[index] - 1 #remove cards - 1 for win
+    def updatePlayers(self, roundResults, playedCards):
+        for index, roundResult in enumerate(roundResults):
+            if roundResult == "win":
+                cards = playedCards[index] - 1 #remove cards - 1 for win
                 self.players[index].crowns += 1 #add crown
-                self.players[index].removehighestcards(cards)
-            elif roundresult == "loss":
-                cards = playedcards[index] # remove all cards for loss
-                self.players[index].removehighestcards(cards)
-            elif roundresult == "tie":
-                playedcard = playedcards[index] # remove 1 card for tie
-                self.players[index].removecard(playedcard)
+                self.players[index].removeHighestCards(cards)
+            elif roundResult == "loss":
+                cards = playedCards[index] # remove all cards for loss
+                self.players[index].removeHighestCards(cards)
+            elif roundResult == "tie":
+                playedCard = playedCards[index] # remove 1 card for tie
+                self.players[index].removeCard(playedCard)
 
         if self.verbose: #print console output
-            self.printroundresults(roundresults, playedcards)
+            self.printroundResults(roundResults, playedCards)
 
-
-    def checkwin(self):
+    def checkWin(self):
         if self.round > 25:
-            self.gamestate = "over"
+            self.gameState = "over"
         for player in self.players:
-            if player.crowns >= self.crownstowin:
-                self.gamestate = "over"
+            if player.crowns >= self.crownsToWin:
+                self.gameState = "over"
                 return True
         return False 
 
-    def initgame(self):
+    def initGame(self):
         self.reset()
-        self.gamestate = "running"
-        nplayers = len(self.players)
-        if nplayers < 2:
+        self.gameState = "running"
+        nPlayers = len(self.players)
+        if nPlayers < 2:
             print("Not enough players.")
-        elif nplayers == 2:
-            self.crownstowin = 3
+        elif nPlayers == 2:
+            self.crownsToWin = 3
         else:
-            self.crownstowin = 2
+            self.crownsToWin = 2
         if self.verbose:
             print("Welcome to Henriekow! Good luck.")
 
-    def startgame(self): #return value is a bad choice for now
-        self.initgame()
-        if self.trainai:
+    def startGame(self): #return value is a bad choice for now
+        self.initGame()
+        if self.trainAi:
             return
-        while self.gamestate == "running":
-            self.runround()
+        while self.gameState == "running":
+            self.runRound()
         else:
             if self.verbose:
-                print(str(self.findwinner().name) + " wins the game!")
-            return self.findwinner()
+                print(str(self.findWinner().name) + " wins the game!")
+            return self.findWinner()
 
-
-    def runround(self, cards = [0]*9): # play a complete round, (each player plays 1 card), the optional parameter "cards" allow to input specific inputs (i.e. to process ai output )
+    def runRound(self, cards = [0]*9): # play a complete round, (each player plays 1 card), the optional parameter "cards" allow to input specific inputs (i.e. to process ai output )
         self.round += 1 
-        playedcards = cards[:len(self.players)]
+        playedCards = cards[:len(self.players)]
         for i, player in enumerate(self.players): 
-            if(player.strategy != "trainai"):
-                playedcards[i] = player.playcard() # play card according to strategy
+            if(player.strategy != "trainAi"):
+                playedCards[i] = player.playCard() # play card according to strategy
             else:
                 if cards[i] not in player.cards: # ai uses the card that is passed in cards
-                    self.gamestate = "abort" #abort for playing an invalid card
-        roundresults = self.getroundresults(playedcards) # evaluate round
-        self.updateplayers(roundresults, playedcards) # update player cards and crowns
-        self.checkwin()
-        return roundresults
+                    self.gameState = "abort" #abort for playing an invalid card
+        roundResults = self.getroundResults(playedCards) # evaluate round
+        self.updatePlayers(roundResults, playedCards) # update player cards and crowns
+        self.checkWin()
+        return roundResults
 
-    # def setwrongpickpercentage(self, player):
-    #     self.wrongpickpercentage = player.wrongwicks/self.round * 100
-
-
-    def gamestatetoaiinput(self): # function to extract the model input info from the game
-        allinputs = []
+    def gameStateToAiInput(self): # function to extract the model input info from the game
+        allInputs = []
         for player in self.players:
             # playerinput = []
             for card in range(11):
                 if card in player.cards:
-                    allinputs.append(1)
+                    allInputs.append(1)
                 else:
-                    allinputs.append(0)
-            allinputs.append(player.crowns)
-        normedinput = self.normalize(allinputs)
+                    allInputs.append(0)
+            allInputs.append(player.crowns)
+        normedinput = self.normalize(allInputs)
         return np.array([normedinput])
 
-
-    def normalize(self, inputlist):
-        inputs = np.array(inputlist)
+    def normalize(self, inputList):
+        inputs = np.array(inputList)
         mean = inputs.mean()
         std = inputs.std()
         normed = (inputs - mean)/std
         return normed
-        
 
-
-    def getroundresults(self, playedcards):
-        roundresults = ["loss"] * len(playedcards)
-        if self.showgames:
-            print(playedcards)
-        highestcard = max(playedcards)
-        occurence = Counter(playedcards)[highestcard]
+    def getroundResults(self, playedCards):
+        roundResults = ["loss"] * len(playedCards)
+        if self.showGames:
+            print(playedCards)
+        highestCard = max(playedCards)
+        occurence = Counter(playedCards)[highestCard]
         if occurence == 1:
-            index = playedcards.index(highestcard)
-            roundresults[index] = "win"
+            index = playedCards.index(highestCard)
+            roundResults[index] = "win"
         else:
-            for i in range(len(roundresults)):
-                if(playedcards[i] == highestcard):
-                    roundresults[i] = "tie"
-        return roundresults
+            for i in range(len(roundResults)):
+                if(playedCards[i] == highestCard):
+                    roundResults[i] = "tie"
+        return roundResults
 
-    def findwinner(self):
+    def findWinner(self):
         for p in self.players:
-            if p.crowns >= self.crownstowin:
+            if p.crowns >= self.crownsToWin:
                 return p
-        newp = player.Player("tie") # newplayer stands for a pseudo winner in case of a tie
-        return newp
+        pseudoPlayer = player.Player("tie") # newPlayer stands for a pseudo winner in case of a tie
+        return pseudoPlayer

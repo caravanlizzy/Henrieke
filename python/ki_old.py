@@ -1,4 +1,5 @@
 #%%
+import random
 import sklearn
 import keras
 import game as cardgame
@@ -13,7 +14,7 @@ import math
 # define the rewardsystem
 rewards = {
     "base" : 0,
-    "fail" : -100,
+    "fail" : -200,
     "loss" : -10,
     "crown" : 5,
     "win" : 60
@@ -22,18 +23,32 @@ rewards = {
 
 
 # new ai settings
-newmodelname = "zerobase_deep_model"
+newmodelname = "anyopponentai"
 
-# previous ai settings
-loadmodelname = "henrieke_model"
+
 
 
 #training parameters
 nplayers = 5
-ngames = 10**6
+ngames = 2*10**5
 maxrounds = 35
 learningrate = 0.01
 optimizer = keras.optimizers.Adam(lr=learningrate)
+
+#counter to keep track of the ai's wrong picks
+wrongpicks = 0
+
+#available strats to train against:
+strategies = ["randombot", "beabot", "niklasbot", "henrieke", "ausweglos", "ai"]
+
+#load availabe ai models to train against 
+trainedais = {
+    "henrieke_ai" : keras.models.load_model("henrieke_model", compile=False),
+    "zerobase_ai" : keras.models.load_model("zerobase_model", compile=False),
+    "zerobase_deep_ai" : keras.models.load_model("zerobase_deep_model", compile=False),
+    "anyopponentai" : keras.models.load_model("anyopponentai", compile=False)
+}
+
 
 
 # define input shape
@@ -90,16 +105,26 @@ def getaiseat(game, newmodelname):
         if player.name == newmodelname:
             return game.players.index(player)
 
+def drawrandomstrategy(includeai = True):
+    strats = strategies.copy()
+    if not includeai:
+        strats.pop(strats.index("ai"))
+    return random.choice(strats)
 
 def setupgame(playernum): # setup a game with training settings
     newgame = cardgame.Game()
     newgame.trainai = True
     newgame.addplayer(newmodelname)
     for i in range(playernum-1):
-        newgame.addplayer("random"+str(i))
+        playerstrategy = drawrandomstrategy()
+    #     # print(playerstrategy)
+        if playerstrategy == "ai":
+            model = trainedais["zerobase_deep_ai"]
+            newgame.addai(playerstrategy + str(i), model)
+        else:
+            newgame.addplayer(playerstrategy+str(i), playerstrategy)   
+        # newgame.addplayer("randombot" + str(random.choice([1,2,3,4,5,6,7,8,9])))   
     return newgame
-
-
 
 def getkireward(game, roundresult, rewards): #get the rewards for a given roundresult
     aiseat = getaiseat(game, newmodelname)
@@ -142,7 +167,7 @@ def playonegame(model, maxrounds, nplayers): # play rounds until either 1 player
             game, grads, reward = playround(game, model)
             allrewards.append(reward)
             allgrads.append(grads)
-            if(reward == -100):
+            if(reward == rewards["fail"]):
                 break #abort game since an invalid card has been played by ai
         else:
             break
@@ -161,43 +186,50 @@ def normalizerewards(allrewards):
 
 #######     functions to test the trained model     #######s
 
-def createrandomgamestate(nplayers): # return an arbitrary gamestate (not won yet) - useful to quickly test tendencies
+def createrandomgamestate(nplayers): # return an arbitrary gamestate (not won yet) - useful to quickly test ai behaviour
     gamestate = [np.random.choice([0,1]) for i in range(60)]
     return np.array([gamestate], dtype=float)
 
 c = createrandomgamestate # for quick access
 
-def playtestgame(model, playernames): # play a complete game - by default against random kis with the trained ai in seat 1
+def testgame(model, playernames): # play a complete game - by default against random kis with the trained ai in seat 1
     game = cardgame.Game()
     for player in playernames:
-        game.addplayer(player)
+        strategy = drawrandomstrategy(False)
+        # print(strategy)
+        game.addplayer(player, strategy=strategy)
     game.players[0].strategy = "ai"
-    game.players[0].aimodel = model
-    winner = game.startgame()
-    return winner
+    game.players[0].name = "ai"
+    game.players[0].loadmodel(model)
+    game.startgame()
+
+    return game
 
 def runtest(model, ngames = 100): # play #ngames and print the win percentage of the trained ki
-    ainame = "AI"
+    ainame = "ai"
     playernames = [ainame, "Christian", "Uliana", "Florian", "Markus"]
     wins = {}
+    wrongpickpercentage = []
     for name in playernames:
         wins.update({name : 0})
     wins.update({"tie": 0})
     for k in tqdm.tqdm(range(ngames), desc="Progress"):
-        winner = playtestgame(model, playernames)
-        name = winner.name
-        wins[name] += 1
-    for p  in playernames:
-        print("\n" + str(p) + " wins: " +str(wins[p]) + " times. -> " + str(wins[p]/ngames*100.0) + "%")
+        gamefinal = testgame(model, playernames)
+        winner = gamefinal.findwinner()
+        wins[winner.name] += 1
+        wrongpickpercentage.append(gamefinal.players[0].wrongpicks*100/gamefinal.round)
+    showteststats(wins, wrongpickpercentage, ngames)
+
+
+def showteststats(wins, wrongpickpercentage, ngames):
+    for p in wins:
+          print("\n" + str(p) + " wins: " +str(wins[p]) + " times. -> " + str(wins[p]/ngames*100.0) + "%")
     print("\n" + str(wins["tie"]/ngames * 100) + "% of the games ended tie.")
+    averagewrongpicks = np.sum(wrongpickpercentage)/len(wrongpickpercentage)
+    print("\n" + "AI picked a wrong card in " + str(averagewrongpicks) + "%. ")
     
 
-
 def trainmodel(model = model, ngames = ngames, maxrounds = maxrounds, nplayers = nplayers):
-    # loop to actually train the model
-    # if trainmodel:
-        # if loadmodel:
-        #     model = keras.models.load_model(loadmodelname)
     for i in tqdm.tqdm(range(ngames), desc="Progress"):
         # print("\nGame # " + str(i))
         allrewards, allgrads = playonegame(model, maxrounds, nplayers)
@@ -212,10 +244,10 @@ def trainmodel(model = model, ngames = ngames, maxrounds = maxrounds, nplayers =
     model.save(newmodelname)
     return model
 
+trainmodel(model=trainedais["anyopponentai"])
 
-
-testmodel = keras.models.load_model(loadmodelname)
-runtest(testmodel, 10**4)
+# testmodel = trainedais["anyopponentai"]
+# runtest(testmodel, 10**4)
 
 
 # todo:
