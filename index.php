@@ -29,6 +29,7 @@
 
 <script>
     let a = new Graphic();
+    console.log(a)
     a.drawmainframe();
     a.drawboards([1,2,3,4]);
 </script>

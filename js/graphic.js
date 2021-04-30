@@ -1,8 +1,7 @@
 class Graphic {
-    constructor() {
-        this.playertableaus = [];
-    }
-
+    // constructor() {
+    //     this.playertableaus = [];
+    // }
     drawbox(classname, id, parente) {
         let box = document.createElement("div");
         box.className = classname;
