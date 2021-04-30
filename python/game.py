@@ -62,7 +62,7 @@ class Game:
                 return True
         return False 
 
-    def initGame(self):
+    def init(self):
         self.reset()
         self.gameState = "running"
         nPlayers = len(self.players)
@@ -75,8 +75,8 @@ class Game:
         if self.verbose:
             print("Welcome to Henriekow! Good luck.")
 
-    def startGame(self): #return value is a bad choice for now
-        self.initGame()
+    def start(self): #return value is a bad choice for now
+        self.init()
         if self.trainAi:
             return
         while self.gameState == "running":

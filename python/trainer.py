@@ -2,7 +2,7 @@
 import random
 import sklearn
 import keras
-import game as game
+import game
 import tensorflow as tf
 import numpy as np
 from collections import Counter
@@ -21,7 +21,6 @@ class Trainer:
             "crown" : 5,
             "win" : 60
         }
-
         #training parameters
         self.nPlayers = 5
         self.nGames = 10**6
@@ -43,7 +42,8 @@ class Trainer:
             5 : ["henrieke_model", "zerobase_model", "zerobase_deep_model", "anyopponentai"]
         }
 
-
+    def setReward(self, event, value):
+        self.rewards[event] = value
 
     def setPlayers(self, n):
         self.nPlayers = n
@@ -160,7 +160,7 @@ class Trainer:
 
     def playOneGame(self, model, modelName): # play rounds until either 1 player wins or #maxrounds rounds have been played
         game = self.setupGame(modelName)
-        game.startGame()
+        game.start()
         allRewards = []
         allGrads = []
         for r in range(self.maxRounds):
@@ -201,7 +201,7 @@ class Trainer:
         newGame.players[0].strategy = "ai"
         newGame.players[0].name = "ai"
         newGame.players[0].loadModel(model)
-        newGame.startGame()
+        newGame.start()
         return newGame
 
     def runTest(self, model, nGames = 100): # play #ngames and print the win percentage of the trained ki
@@ -226,7 +226,7 @@ class Trainer:
                 print("\n" + str(p) + " wins: " +str(wins[p]) + " times. -> " + str(wins[p]/nGames*100.0) + "%")
         print("\n" + str(wins["tie"]/nGames * 100) + "% of the games ended tie.")
         averagewrongPicks = np.sum(wrongPickPercentage)/len(wrongPickPercentage)
-        print("\n" + "AI picked a wrong card in " + str(averagewrongPicks) + "%. ")
+        print("\n" + "AI picked an invalid card in " + str(averagewrongPicks) + "%. ")
         
 
     def preloadModels(self, selection = []):
