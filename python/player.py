@@ -95,9 +95,9 @@ class Player:
         return card
     
     def ai(self): #access the ai 
-        modelin = self.game.gameStateToAiInput()
-        modelout = self.aiModel(modelin)[0]
-        card = np.argmax(modelout)
+        modelIn = self.game.gameStateToAiInput()
+        modelOut = self.aiModel(modelIn)[0]
+        card = np.argmax(modelOut)
         if card not in self.cards:
             self.wrongPicks += 1
             card = random.choice(self.cards)

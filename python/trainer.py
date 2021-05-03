@@ -25,11 +25,10 @@ class Trainer:
         self.nPlayers = 5
         self.nGames = 10**5
         self.maxRounds = 25
-        self.learningRate =  0.05
+        self.learningRate =  0.01
 
         self.optimizer = keras.optimizers.Adam(lr=self.learningRate) #optimizier is being loaded 
         self.modelList = {} #list to store models to prevent loading them more than once
-        self.model = None #trained model is stored here automatically
         self.wrongPicks = 0 #counter to detect ai wrong picks
 
         #available strats to train against:
@@ -47,7 +46,9 @@ class Trainer:
     def setMaxRounds(self, m):
         self.maxRounds = m
 
-    
+    def setNGames(self, n):
+        self.nGames = n
+
     def setLearningRate(self, lr):
         self.learningRate = lr
 
@@ -66,12 +67,11 @@ class Trainer:
         print("New model successfully created.")
         return model
 
-    ### preprocess the game in order to make the model work    
-
+    ### preprocess the game in order to make the model work with an actual game 
+    #   
     def transformGameState(self, game): # extract the model input info from the game
         allinputs = []
         for player in game.players:
-            # playerinput = []
             for card in range(11):
                 if card in player.cards:
                     allinputs.append(1)
@@ -115,14 +115,12 @@ class Trainer:
         newGame.addPlayer(trainModelName, "trainAi")
         for i in range(self.nPlayers-1):
             playerStrategy = self.getStrategy()
-        #     # print(playerStrategy)
             if playerStrategy == "ai":
                 loadModelName = "zerobase_deep_model"
                 model = self.loadModel(loadModelName)
                 newGame.addAi(playerStrategy + str(i), model)
             else:
                 newGame.addPlayer(playerStrategy+str(i), playerStrategy)   
-            # newGame.addPlayer("randombot" + str(random.choice([1,2,3,4,5,6,7,8,9])))   
         return newGame
 
     def getAiReward(self, game, roundresult, modelName): #get the rewards for a given roundresult
@@ -130,13 +128,10 @@ class Trainer:
         reward = self.rewards["base"]
         if game.gameState == "abort":
             reward = self.rewards["fail"]
-            print("fail passierte: " + str(reward))
         elif roundresult[0] == "win":
             reward = self.rewards["crown"]
-            # print("crown passierte: " + str(reward))
             if game.players[aiSeat].crowns == 2:
                 reward = self.rewards["win"]
-                # print("win passierte: " + str(reward))
         else:
             for player in game.players:
                 if player.crowns == 2:
@@ -147,60 +142,12 @@ class Trainer:
         # return random.choice([True, False])
         return True
 
-    def playRound(self, game, model, modelName): # play a single round (each participants plays 1 card)
-        with tf.GradientTape() as tape:
-            modelInput = game.gameStateToAiInput()
-            modelOutput = model(modelInput)[0]
-            # print("modeloutput: " + str(modelOutput))
-            if self.coinToss():
-                card = np.random.choice(range(11), 1, np.array(modelOutput).tolist)[0]
-            else:
-                card = tf.math.argmax(modelOutput)
-                # print("model played card: " + str(card))
-            # print(card)
-            move = np.zeros(11)
-            move[card] = 1.0
-            move = tf.cast(move, dtype=tf.float32)
-            lossFunction = keras.losses.CategoricalCrossentropy()
-            # loss_fn = keras.losses.Adam()
-            # print("move is: " + str(move))
-            # print("modeloutput is: " + str(modelOutput))
-            lossValue = lossFunction(move, modelOutput)
-            print("loss is: " + str(lossValue))
-        grads = tape.gradient(lossValue, model.trainable_variables)
-        print("current gradienst: "+str(grads))
-        roundresult = game.runRound([card, 0, 0, 0, 0])
-        reward = self.getAiReward(game, roundresult, modelName)
-        return game, grads, reward
-
-
-    def playOneGame(self, model, modelName): # play rounds until either 1 player wins or #maxrounds rounds have been played
-        game = self.setupGame(modelName)
-        game.start()
-        allRewards = []
-        allGrads = []
-        for r in range(self.maxRounds):
-            if game.gameState == "running":
-                game, grads, reward = self.playRound(game, model, modelName)
-                allRewards.append(reward)
-                allGrads.append(grads)
-                if(reward == self.rewards["fail"]):
-                    break #abort game since an invalid card has been played by ai
-            else:
-                break
-        # print("all rewards for this game are: " + str(allRewards))
-        return allRewards, allGrads
-
     def normalizeRewards(self, allRewards): 
         allRewards = np.array(allRewards)
         if np.sum(allRewards) == 0:
             return allRewards
         mean = allRewards.mean()
-        # print("mean: " + str(mean))
         std = allRewards.std()
-        # print("std: " + str(std))
-        if std == 0:
-            print(std)
         normalized = [(rewards - mean)/std for rewards in allRewards]
         return normalized
 
@@ -211,20 +158,20 @@ class Trainer:
         return np.array([gameState], dtype=float)
 
 
-    def setupTest(self, modelName, playerNames): # play a complete game - by default against random bots with the trained ai in seat 1
+    def setupModelTest(self, modelName, playerNames): # play a complete game - by default against random bots with the trained ai in seat 1
         newGame = game.Game()
         for player in playerNames:
             strategy = self.getStrategy(False)
             newGame.addPlayer(player, strategy=strategy)
         newGame.players[0].strategy = "ai"
         newGame.players[0].name = "ai"
-        # model = self.loadModel(modelName)
-        model = self.model
+        self.addToModelList("thirdmay")
+        model = self.loadModel("thirdmay")
         newGame.players[0].setModel(model)
         newGame.start()
         return newGame
 
-    def test(self, modelName, nGames = 100): # play #ngames and print the win percentage of the trained ki
+    def testModel(self, modelName, nGames = 100): # play #ngames and print the win percentage of the trained ki
         playerNames = ["ai", "Christian", "Uliana", "Florian", "Markus"]
         wins = {}
         wrongPickPercentage = []
@@ -232,7 +179,7 @@ class Trainer:
             wins.update({name : 0})
         wins.update({"tie": 0})
         for k in tqdm.tqdm(range(nGames), desc="Progress"):
-            testGame = self.setupTest(modelName, playerNames)
+            testGame = self.setupModelTest(modelName, playerNames)
             winner = testGame.findWinner()
             wins[winner.name] += 1
             wrongPickPercentage.append(testGame.players[0].wrongPicks*100/testGame.round)
@@ -254,20 +201,58 @@ class Trainer:
         if modelName in self.modelList:
             model = self.modelList[modelName]
         else:
+            print("loading " + str(modelName)+ " ...")
             model = keras.models.load_model(modelName, compile = compile)
         return model
 
-    def addToModelList(self, modelNames):
-        for modelName in modelNames:
-            if modelName not in self.modelList:
-                model = self.loadModel(modelName)
-                print(str(modelName) + " has been added to <trainerInstance>.modelList.")
-                self.modelList[modelName] = model
+    def addToModelList(self, modelName):
+        if modelName not in self.modelList:
+            model = self.loadModel(modelName)
+            print(str(modelName) + " has been added to <trainerInstance>.modelList.")
+            self.modelList[modelName] = model
 
     def getModel(self, modelName):
         if modelName not in self.modelList:
-            self.addToModelList(modelName)
+            print("Model not in <trainer>.modelList.")
         return self.modelList[modelName]
+
+    def getFinalReward(self, finalReward, allGrads, step, varIndex):
+        result = finalReward * allGrads[step][varIndex]
+        return result
+
+    def playOneRound(self, game, model, modelName): # play a single round (each participants plays 1 card)
+        with tf.GradientTape() as tape:
+            modelInput = game.gameStateToAiInput()
+            modelOutput = model(modelInput)[0]
+            if self.coinToss():
+                card = np.random.choice(range(11), 1, np.array(modelOutput).tolist)[0]
+            else:
+                card = tf.math.argmax(modelOutput)
+            move = np.zeros(11)
+            move[card] = 1.0
+            move = tf.cast(move, dtype=tf.float32)
+            lossFunction = keras.losses.CategoricalCrossentropy()
+            lossValue = lossFunction(move, modelOutput)
+        grads = tape.gradient(lossValue, model.trainable_variables)
+        roundresult = game.runRound([card, 0, 0, 0, 0])
+        reward = self.getAiReward(game, roundresult, modelName)
+        return game, grads, reward
+
+    def playOneGame(self, model, modelName): # play rounds until either 1 player wins or #maxrounds rounds have been played
+        game = self.setupGame(modelName)
+        game.start()
+        allRewards = []
+        allGrads = []
+        for r in range(self.maxRounds):
+            if game.gameState == "running":
+                game, grads, reward = self.playOneRound(game, model, modelName)
+                allRewards.append(reward)
+                allGrads.append(grads)
+                if(reward == self.rewards["fail"]):
+                    break #abort game since an invalid card has been played by ai
+            else:
+                break
+        return allRewards, allGrads
 
     def trainModel(self, newModelName, loadModelName = ""):
         if loadModelName in self.modelList:
@@ -278,41 +263,25 @@ class Trainer:
         for i in tqdm.tqdm(range(self.nGames), desc="Progress"):
             allRewards, allGrads = self.playOneGame(model, newModelName)
             finalRewards = self.normalizeRewards(allRewards)
-            # print("normalized rewards are: " + str(finalRewards))
             allMeanGrads = []
             for varIndex in range(len(model.trainable_variables)):
                 meanGrads = tf.reduce_mean(
-                    # [finalreward * allgrads[step][varindex]
                     [self.getFinalReward(finalReward, allGrads, step, varIndex)
                     for step, finalReward in enumerate(finalRewards)], axis=0)
                 allMeanGrads.append(meanGrads)
-                # print(meanGrads)
-            # print(model.trainable_variables)
-            # print(allmeangrads)
             self.optimizer.apply_gradients(zip(allMeanGrads, model.trainable_variables))
-            print(model.trainable_weights)
-        self.model = model
-        self.addToModelList(newModelName)
-        print("\nModel Saved.")
+        self.saveModel(model, newModelName)
         return model
 
-    def getFinalReward(self, finalReward, allGrads, step, varIndex):
-        # print(finalReward)
-        result = finalReward * allGrads[step][varIndex]
-        # print(result)
-        return result
+    def saveModel(self, model, modelName):
+        model.save(modelName)
+        self.addToModelList(modelName)
+        print("\nModel Saved.")
 
 
 
-modelToTrain = "secondmay_new"
-trainer = Trainer()
-trainer.addToModelList(["zerobase_deep_model"])
-newModel = trainer.trainModel("secondmay_new")
-trainer.test(modelToTrain, nGames = 10**4)
 
 # todo:
 #   - plot the error/learning curve
-
-# %%
 
 # %%

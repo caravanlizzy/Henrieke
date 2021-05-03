@@ -24,9 +24,7 @@ class Game:
         ai = player.Player("ai")
         ai.game = self
         ai.strategy = "ai"
-        print(model)
-        print("das war der modelname")
-        ai.loadModel(model)
+        ai.setModel(model)
         self.players.append(ai)
 
     def reset(self):
@@ -89,7 +87,7 @@ class Game:
             return self.findWinner()
 
     def runRound(self, cards = [0]*9): # play a complete round, (each player plays 1 card), the optional parameter "cards" allow to input specific inputs (i.e. to process ai output )
-        print("gespielte Karte: " + str(cards))
+        # print("gespielte Karte: " + str(cards))
         self.round += 1 
         playedCards = cards[:len(self.players)]
         for i, player in enumerate(self.players): 

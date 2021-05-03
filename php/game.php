@@ -74,7 +74,7 @@ class Game{
     }
 
     function addPlayer($nick) {
-        $playerId = $this->createPlayer($player);
+        $playerId = $this->createPlayer($nick);
         $this->increasePlayerCount();
         $this->createMove($playerId);
     }
