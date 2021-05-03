@@ -24,6 +24,8 @@ class Game:
         ai = player.Player("ai")
         ai.game = self
         ai.strategy = "ai"
+        print(model)
+        print("das war der modelname")
         ai.loadModel(model)
         self.players.append(ai)
 
@@ -87,6 +89,7 @@ class Game:
             return self.findWinner()
 
     def runRound(self, cards = [0]*9): # play a complete round, (each player plays 1 card), the optional parameter "cards" allow to input specific inputs (i.e. to process ai output )
+        print("gespielte Karte: " + str(cards))
         self.round += 1 
         playedCards = cards[:len(self.players)]
         for i, player in enumerate(self.players): 
@@ -95,6 +98,7 @@ class Game:
             else:
                 if cards[i] not in player.cards: # ai uses the card that is passed in cards
                     self.gameState = "abort" #abort for playing an invalid card
+                    return
         roundResults = self.getroundResults(playedCards) # evaluate round
         self.updatePlayers(roundResults, playedCards) # update player cards and crowns
         self.checkWin()

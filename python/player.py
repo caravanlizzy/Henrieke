@@ -103,6 +103,6 @@ class Player:
             card = random.choice(self.cards)
         return card  
 
-    def loadModel(self, model): #load the ai
+    def setModel(self, model): #load the ai
         self.aiModel = model
 # %%
