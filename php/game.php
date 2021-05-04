@@ -1,94 +1,179 @@
 <?php
+require 'dbconnecter.php';
+
 class Game{
-  // create player, game, move
     function __construct($conn, $gameId) {
-        $this->conn = $conn;
+        $this->dbConnecter = new DbConnecter($conn, $gameId);
         $this->gameId = $gameId;
     }
 
-    // create a game
     function createGame() {
-        $sql = "INSERT INTO Games (gameId, playerCount, round, state) VALUES ('$this->gameId', '0', '0', 'idle')";
-        $this->conn->query($sql);
+        $this->dbConnecter->createGame();
     }
 
-    function createPlayer($nick){
-        $playerId = $this->getPlayerCount() + 1;
-        $sql = "INSERT INTO Players (gameId, playerId, nick, crowns, cards, computer) VALUES ('$this->gameId', '$playerId', '$nick', '0', '11111111111', '0')";
-        $this->conn->query($sql);
-        return $playerId;
+    function startGame() {
+        echo "Starting Game.";
+        echo "<br>";
+        $this->dbConnecter->setGameState("running");
     }
 
-
-    //access table column
-    function getPlayerCount() {
-        $sql = "SELECT playerCount FROM Games WHERE gameId='$this->gameId'";
-        $result = $this->conn->query($sql);
-        return $result->fetch_assoc()['playerCount'];
+    function endGame() {
+        $this->dbConnecter->setGameState("idle");
+        echo "Game Over!";
     }
 
-    function setGameState($newState) {
-        $sql = "UPDATE Games SET state='$newState' WHERE gameId='$this->gameId'";
-        $this->conn->query($sql); 
+    function deleteGame() {
+        $this->dbConnecter->deleteAllPlayers();
+        $this->dbConnecter->deleteMove();
+        $this->dbConnecter->deleteGame();
     }
 
-    function getGameState() {
-        $sql = "SELECT state FROM Games WHERE gameId='$this->gameId'";
-        $result = $this->conn->query($sql);
-        return $result->fetch_assoc()['state'];
+    function endRound() {
+        $result = $this->getRoundResult();
+        $c = $this->dbConnecter->getCrowns(4);
+        $this->updateDecks($result);
+        $updatedCrown = $this->updateCrowns($result);
+        // print_r($updatedCrown);
+        if($this->checkWin($updatedCrown)) {
+            $this->endGame();
+        } else{
+            $this->nextRound();
+        }
     }
 
-    function increasePlayerCount() {
-        $newPlayerCount = $this->getPlayerCount() + 1;
-        $sql = "UPDATE Games SET playerCount='$newPlayerCount' WHERE gameId='$this->gameId'";
-        $this->conn->query($sql);
+    function nextRound() {
+        $this->dbConnecter->resetMove();
+        $this->dbConnecter->increaseRound();
     }
 
-    function increaseRound() {
-        $curRound = $this->getRound();
-        $newRound = $curRound + 1;
-        $sql = "UPDATE Games SET round='$newRound' WHERE gameId='$this->gameId'";
-        $this->conn->query($sql);
+    function checkWin($updatedCrown) {
+        if($updatedCrown > 1){
+            return TRUE;
+        }
     }
 
-    function getRound() {
-        $sql = "SELECT round FROM Games WHERE gameId='$this->gameId'";
-        $result = $this->conn->query($sql);
-        return $result->fetch_assoc()['round'];
+    function playCard($playerId, $card) { // main function for the game flow
+        if(!$this->isCardAvailable($playerId, $card)) {
+            echo "card not available";
+            return;
+        }
+        $this->dbConnecter->setCard($playerId, $card);
+        if($this->dbConnecter->checkMoveComplete()) {
+            $this->endRound();
+        }
     }
 
-    //create
-    function createMove($playerId) {
-        $sql = "INSERT INTO Move (gameId, playerid) VALUES ('$this->gameId', '$playerId')";
-        $this->conn->query($sql);
-    }
-
-    function setCard($playerId, $card) {
-        $sql = "UPDATE Moves SET card='$card' WHERE gameId='$this->gameId' AND playerId='$playerId";
-        $this->conn->query($sql);
-    }
-
-    function unsetCard($playerId) {
-        $sql = "UPDATE Moves SET card='NULL' WHERE gameId='$this->gameId' AND playerId='$playerId";
-        $this->conn->query($sql);
-    }
 
     function addPlayer($nick) {
-        $playerId = $this->createPlayer($nick);
-        $this->increasePlayerCount();
-        $this->createMove($playerId);
+        $playerId = $this->dbConnecter->createPlayer($nick);
+        $this->dbConnecter->increasePlayerCount();
+        $this->dbConnecter->createMove($playerId);
     }
 
-    // function setupPlayers($playerList) {
-    //     foreach($playerList as $player) {
 
-    //     }
-    // }
 
-    // function setupGame($playerList) {
-    //     $this->createGame();
-    //     // $this->setupPlayers($playerList);
-    // }
-  
+    function isCardAvailable($playerId, $card) {
+        $avCards = $this->dbConnecter->getDeck($playerId);
+        if($avCards[$card] == '1') {
+            return TRUE;
+        }
+    }
+
+
+    function updateDecks($results) {
+        $playerIds = $this->dbConnecter->getPlayerIds();
+        for($i = 0; $i < count($playerIds); $i++) {
+            $playerId = $playerIds[$i];
+            $card = $this->dbConnecter->getCard($playerId);
+            $result = $results[$i];
+            $newDeck = $this->calcNewDeck($playerId, $card, $result);
+            $this->dbConnecter->updateDeck($playerId, $newDeck);
+        }
+    }
+
+    function updateCrowns($result) {
+        $playerIds = $this->dbConnecter->getPlayerIds();
+        for($i = 0; $i < count($result); $i++) {
+            if($result[$i] == "win") {
+                $playerId = $playerIds[$i];
+                $newCrowns = $this->dbConnecter->addCrown($playerId);
+                return $newCrowns;
+            }
+        }
+    }
+
+    function calcNewDeck($playerId, $card, $result) {
+        $deck = $this->dbConnecter->getDeck($playerId);
+        $stopIndex = $card;
+        if($result == "win") {
+            // echo "crown won";
+            // echo "<br>";
+            $stopIndex --;
+        }
+        for($i = 0; $i < $stopIndex; $i++) {
+            $deck = $this->removeHighestCard($deck);
+        }
+        return $deck;
+    }
+
+    function removeHighestCard($deck) {
+        for($i = 10; $i > 0; $i--) {
+            if($deck[$i] == '1') {
+                $deck[$i] = "0";
+                return $deck;
+            }
+        }
+        return $deck;
+    }
+
+    function getRoundResult() {
+        $cards = $this->getPlayedCards();
+        $highest = $this->findHighestCard($cards);
+        $occurrence = $this->getCardOccurrence($cards, $highest);
+        $result = $this->calcRoundResult($cards, $highest, $occurrence);
+        return $result;
+    }
+
+    function calcRoundResult($cards, $highest, $occurrence) {
+        $result = array_fill(0, count($cards), "loss");
+        if($occurrence == 1) {
+            $index = array_search($highest, $cards);
+            $result[$index] = "win";
+        }
+        else {
+            for($i = 0; $i < count($cards); $i++) {
+                if($cards[$i] == $highest) {
+                    $result[$i] = "tie";
+                }
+            }
+        }
+        return $result;
+    }
+
+    function findHighestCard($cards) {
+        return max($cards);
+    }
+
+    function getCardOccurrence($cards, $card) {
+        $occurrence = 0;
+        for( $i = 0; $i < count($cards); $i++) {
+            if($cards[$i] == $card) {
+                $occurrence ++;
+            }
+        }
+        return $occurrence;
+    }
+
+    function getPlayedCards() {
+        $playerIds = $this->dbConnecter->getPlayerIds();
+        $cards = array();
+        for($i = 0; $i < count($playerIds); $i++) {
+            $newCard = $this->dbConnecter->getCard($playerIds[$i]);
+            array_push($cards, $newCard);
+        }
+        return $cards;
+    }
+
 }
+
 ?>
