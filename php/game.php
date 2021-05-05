@@ -1,25 +1,31 @@
 <?php
 require 'dbconnecter.php';
+// require 'response.php';
 
 class Game{
-    function __construct($conn, $gameId) {
+    function __construct($conn, $gameId = 0) {
         $this->dbConnecter = new DbConnecter($conn, $gameId);
         $this->gameId = $gameId;
+        // print_r($gameId);
+    }
+
+    function setGameId($id) {
+        $this->gameId = $id;
     }
 
     function createGame() {
-        $this->dbConnecter->createGame();
+        //host has to be checked
+        $gameId = $this->dbConnecter->getHighestGameId() + 1;
+        $this->gameId = $this->dbConnecter->createGame($gameId);
+        return $gameId;
     }
 
     function startGame() {
-        echo "Starting Game.";
-        echo "<br>";
         $this->dbConnecter->setGameState("running");
     }
 
     function endGame() {
         $this->dbConnecter->setGameState("idle");
-        echo "Game Over!";
     }
 
     function deleteGame() {
@@ -30,15 +36,26 @@ class Game{
 
     function endRound() {
         $result = $this->getRoundResult();
-        $c = $this->dbConnecter->getCrowns(4);
-        $this->updateDecks($result);
+        $decks = $this->updateDecks($result);
+        $crowns = $this->getCrowns();
+        // $this->response->setDecks($decks);
+        // $this->response->setCrowns($crowns);
         $updatedCrown = $this->updateCrowns($result);
-        // print_r($updatedCrown);
         if($this->checkWin($updatedCrown)) {
             $this->endGame();
         } else{
             $this->nextRound();
         }
+    }
+
+    function getCrowns() {
+        $playerIds = $this->dbConnecter->getPlayerIds();
+        $crowns = array();
+        for($i = 0 ; $i < count($playerIds); $i++){
+            $crown = $this->dbConnecter->getCrowns($playerIds[$i]);
+            array_push($crowns, $crown);
+        }
+        return $crowns;
     }
 
     function nextRound() {
@@ -54,27 +71,43 @@ class Game{
 
     function playCard($playerId, $card) { // main function for the game flow
         if(!$this->isCardAvailable($playerId, $card)) {
-            echo "card not available";
             return;
         }
         $this->dbConnecter->setCard($playerId, $card);
-        if($this->dbConnecter->checkMoveComplete()) {
-            $this->endRound();
-        }
+        return $card;
     }
 
+    function updateCards() {
+        $cards = $this->getPlayedCards();
+    }
+
+    // function clientUpdate() {  
+    //     $this->checkGameState();
+    //     if($this->dbConnecter->checkMoveComplete()) {
+    //         $this->response->setMoveComplete();
+    //         $this->endRound();
+    //     }
+    //     $response = $this->response->encode();
+    //     // print_r($this->response);
+    //     $this->response->setCardValid();
+    //     echo $response;
+    // }
+
+    function checkGameState() {
+        $gameState = $this->dbConnection->getGameState();
+        // $this->response
+    }
 
     function addPlayer($nick) {
         $playerId = $this->dbConnecter->createPlayer($nick);
         $this->dbConnecter->increasePlayerCount();
         $this->dbConnecter->createMove($playerId);
+        return $playerId;
     }
 
-
-
     function isCardAvailable($playerId, $card) {
-        $avCards = $this->dbConnecter->getDeck($playerId);
-        if($avCards[$card] == '1') {
+        $deck = $this->dbConnecter->getDeck($playerId);
+        if($deck[$card] == '1') {
             return TRUE;
         }
     }
@@ -82,13 +115,16 @@ class Game{
 
     function updateDecks($results) {
         $playerIds = $this->dbConnecter->getPlayerIds();
+        $decks = array();
         for($i = 0; $i < count($playerIds); $i++) {
             $playerId = $playerIds[$i];
             $card = $this->dbConnecter->getCard($playerId);
             $result = $results[$i];
             $newDeck = $this->calcNewDeck($playerId, $card, $result);
+            array_push($decks, $newDeck);
             $this->dbConnecter->updateDeck($playerId, $newDeck);
         }
+        return $decks;
     }
 
     function updateCrowns($result) {
@@ -106,8 +142,6 @@ class Game{
         $deck = $this->dbConnecter->getDeck($playerId);
         $stopIndex = $card;
         if($result == "win") {
-            // echo "crown won";
-            // echo "<br>";
             $stopIndex --;
         }
         for($i = 0; $i < $stopIndex; $i++) {
@@ -128,6 +162,7 @@ class Game{
 
     function getRoundResult() {
         $cards = $this->getPlayedCards();
+        // $this->response->setPlayedCards($cards);
         $highest = $this->findHighestCard($cards);
         $occurrence = $this->getCardOccurrence($cards, $highest);
         $result = $this->calcRoundResult($cards, $highest, $occurrence);

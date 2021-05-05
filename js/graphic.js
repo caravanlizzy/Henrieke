@@ -1,5 +1,9 @@
 class Graphic {
 
+    constructor(game) {
+        this.game = game;
+    }
+
     drawBox(className, id, parente) {
         let box = document.createElement("div");
         box.className = className;
@@ -16,10 +20,9 @@ class Graphic {
         return document.getElementById("mainFrame");
     }
 
-    drawPlayerTableau(playerId) {
-        let playerTableau = this.drawBox("playerTableau", "playerTableau" + playerId, this.getMainFrame());
-        // this.playerTableaus.push(playerTableau);
-        this.drawPlayerInfo(playerId, "testname");
+    drawPlayerTableau(playerId, name) {
+        this.drawBox("playerTableau", "playerTableau" + playerId, this.getMainFrame());
+        this.drawPlayerInfo(playerId, name);
         this.drawCardsBox(playerId);
         this.drawDiscardBox(playerId);
         this.drawCardDisplayBox(playerId);
@@ -38,7 +41,7 @@ class Graphic {
         playerInfo.append(textBox);
     }
 
-    updateplayerInfo(playerId, newName) {
+    updatePlayerInfo(playerId, newName) {
         let playerInfo = document.getElementById("playerInfo" + playerId);
         playerInfo.innerHTML = newName;
     }
@@ -50,15 +53,19 @@ class Graphic {
         this.drawBox("nonZeroBox", "nonZeroBox" + playerId, cardBox);
     }
 
-    drawcard(playerId, card, color) {
+    drawCard(playerId, card, color) {
         let className = "card";
         let id = className + card + "p" + playerId;
         let parentBoxName = (card == 0 ? "zeroBox" : "nonZeroBox");
         let c = this.drawBox(className + " " + color + " " + "small", id, document.getElementById(parentBoxName + playerId)); 
+        c.cardId = card;
+        c.onclick = e => { 
+            this.game.getCards();
+        }
         c.innerHTML = card;
     }
 
-    deletecard(playerId, card) {
+    deleteCard(playerId, card) {
         let id = "card" + card + "p" + playerId;
         let c = document.getElementById(id);
         c.parentNode.removeChild(c);
@@ -69,14 +76,14 @@ class Graphic {
         this.drawBox(className, className + playerId, this.getPlayerTableau(playerId));
     }
 
-    drawdiscard(playerId, card, color) {
+    drawDiscard(playerId, card, color) {
         let className = "discard";
         let id = className + card + "p" + playerId;
         let c = this.drawBox(className + " " + color + " " + "small", id, document.getElementById("discardBox" + playerId));
         c.innerHTML = card;
     }
 
-    deletediscard(playerId, discard) {
+    deleteDiscard(playerId, discard) {
         let id = "discard" + discard + "p" + playerId;
         let dc = document.getElementById(id);
         dc.parentNode.removeChild(dc); 
@@ -106,6 +113,18 @@ class Graphic {
     drawStatusBar() {
         let className = "statusBar";
         this.drawBox(className, className, this.getMainFrame())
+        this.drawCreateGameButton();
+    }
+
+    drawCreateGameButton() {
+        let b = document.createElement("div");
+        b.id = "createGameButton";
+        b.className = "button";
+        b.innerHTML = "Create Game";
+        b.onclick = e => {
+            this.game.createGame();   
+        } 
+        document.getElementById("statusBar").append(b);
     }
 
 }

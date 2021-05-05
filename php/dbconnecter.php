@@ -1,15 +1,23 @@
 <?php
 class DbConnecter{
   // create player, game, move
-    function __construct($conn, $gameId) {
+    function __construct($conn, $gameId = 0) {
         $this->conn = $conn;
         $this->gameId = $gameId;
     }
 
     // create a game
-    function createGame() {
-        $sql = "INSERT INTO Games (gameId, playerCount, round, state) VALUES ('$this->gameId', '0', '0', 'idle')";
+    function getHighestGameId() {
+        $sql = "SELECT MAX(gameId) FROM Games";
+        $result = $this->conn->query($sql);
+        $gameId = $result->fetch_assoc()['MAX(gameId)'];
+        return $gameId;
+    }
+
+    function createGame($gameId) {
+        $sql = "INSERT INTO Games (gameId, playerCount, round, state) VALUES ('$gameId', '0', '0', 'idle')";
         $this->conn->query($sql);
+        return $gameId;
     }
 
     function deleteGame() {
@@ -44,9 +52,9 @@ class DbConnecter{
         $this->setRound($newRound);
     }
 
-    function createPlayer($nick){
-        $playerId = $this->getPlayerCount() + 1; //playerId might need an improvement when players are removed
-        $sql = "INSERT INTO Players (gameId, playerId, nick, crowns, cards, computer) VALUES ('$this->gameId', '$playerId', '$nick', '0', '11111111111', '0')";
+    function createPlayer($nick, $computer = 0){
+        $playerId = $this->getPlayerCount() + 1; //playerId might need an improvement for proper player removing
+        $sql = "INSERT INTO Players (gameId, playerId, nick, crowns, cards, computer) VALUES ('$this->gameId', '$playerId', '$nick', '0', '11111111111', '$computer')";
         $this->conn->query($sql);
         return $playerId;
     }
