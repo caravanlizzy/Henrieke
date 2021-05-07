@@ -20,6 +20,24 @@ class DbConnecter{
         return $gameId;
     }
 
+    function isUnique($pw) {
+        $sql = "SELECT COUNT(*) FROM Players WHERE pw ='$pw'";
+        $result = $this->conn->query($sql);
+        $result = $result->fetch_assoc()['COUNT(*)'];
+        if($result == 0) {
+            return TRUE;
+        }   else{
+            return FALSE;
+        }
+    }
+
+    function getPw($playerId) {
+        $sql = "SELECT pw FROM Players WHERE gameId='$this->gameId' AND playerId='$playerId'";
+        $result = $this->conn->query($sql);
+        $pw = $result->fetch_assoc()['pw'];
+        return $pw;
+    }
+
     function deleteGame() {
         $sql = "DELETE FROM Games WHERE gameId='$this->gameId'";
         $this->conn->query($sql);
@@ -52,9 +70,9 @@ class DbConnecter{
         $this->setRound($newRound);
     }
 
-    function createPlayer($nick, $computer = 0){
+    function createPlayer($nick, $pw, $computer = 0){
         $playerId = $this->getPlayerCount() + 1; //playerId might need an improvement for proper player removing
-        $sql = "INSERT INTO Players (gameId, playerId, nick, crowns, cards, computer) VALUES ('$this->gameId', '$playerId', '$nick', '0', '11111111111', '$computer')";
+        $sql = "INSERT INTO Players (gameId, playerId, nick, crowns, cards, computer, pw) VALUES ('$this->gameId', '$playerId', '$nick', '0', '11111111111', '$computer', '$pw')";
         $this->conn->query($sql);
         return $playerId;
     }
@@ -99,8 +117,6 @@ class DbConnecter{
 
     function addCrown($playerId) {
         $newCrowns = $this->getCrowns($playerId) + 1;
-        // echo "newcrouns in addCrown are";
-        // print_r($newCrowns);
         $sql = "UPDATE Players SET crowns='$newCrowns' WHERE gameId='$this->gameId' AND playerId='$playerId'";
         $this->conn->query($sql);
         return $newCrowns;
@@ -155,10 +171,10 @@ class DbConnecter{
             $playerId = $playerIds[$i];
             $card = $this->getCard($playerId);
             if($card == 11) {
-                return FALSE;
+                return 0;
             }
         }
-        return TRUE;
+        return 1;
     }
 
 

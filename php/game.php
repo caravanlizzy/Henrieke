@@ -46,6 +46,9 @@ class Game{
         } else{
             $this->nextRound();
         }
+        $newCrowns =  $this->getCrowns();
+        $complete = array($decks, $newCrowns);
+        return $complete;
     }
 
     function getCrowns() {
@@ -81,28 +84,38 @@ class Game{
         $cards = $this->getPlayedCards();
     }
 
-    // function clientUpdate() {  
-    //     $this->checkGameState();
-    //     if($this->dbConnecter->checkMoveComplete()) {
-    //         $this->response->setMoveComplete();
-    //         $this->endRound();
-    //     }
-    //     $response = $this->response->encode();
-    //     // print_r($this->response);
-    //     $this->response->setCardValid();
-    //     echo $response;
-    // }
+
 
     function checkGameState() {
         $gameState = $this->dbConnection->getGameState();
         // $this->response
     }
 
+    function createPassword() {
+        $pw = '';
+        $characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        for($i = 0; $i < 16; $i++) {
+            $randomIndex = rand(0, strlen($characters));
+            $pw .= $characters[$randomIndex];
+        }
+        // echo $pw;
+        return $pw;
+    }
+
+    function checkId($playerId, $pw) {
+        $storedPw = $this->dbConnecter->getPw($playerId);
+        if(strcmp($pw, $storedPw)) {
+            return TRUE;
+        }
+    }
+
     function addPlayer($nick) {
-        $playerId = $this->dbConnecter->createPlayer($nick);
+        $pw = $this->createPassword();
+        $playerId = $this->dbConnecter->createPlayer($nick, $pw);
         $this->dbConnecter->increasePlayerCount();
         $this->dbConnecter->createMove($playerId);
-        return $playerId;
+        $playerInfo = array($playerId, $pw);
+        return $playerInfo;
     }
 
     function isCardAvailable($playerId, $card) {
@@ -199,6 +212,29 @@ class Game{
         return $occurrence;
     }
 
+    function allCardsPlaced() {
+        $playerCount = $this->dbConnecter->getPlayerCount();
+        $cards = $this->getPlayedCards();
+        // print_r($cards);
+        $placedCount = 0;
+        for($i = 0; $i < count($cards); $i++) {
+            $card = $cards[$i];
+            if($card == '11') {
+                continue;
+            }
+            $placedCount++;
+        }
+        // echo $playerCount;
+        // echo "placed";
+        // echo $placedCount;
+        return $playerCount == $placedCount;
+    }
+
+    function checkMoveComplete(){
+        $complete = $this->dbConnecter->checkMoveComplete();
+        return $complete;
+    }
+
     function getPlayedCards() {
         $playerIds = $this->dbConnecter->getPlayerIds();
         $cards = array();
@@ -208,7 +244,6 @@ class Game{
         }
         return $cards;
     }
-
 }
 
 ?>

@@ -11,13 +11,14 @@ class Request{
         return this.gameId;
     }
 
-    playCard(gameId, playerId, card) {
+    playCard(gameId, playerId, pw, card) {
         $.get("php/access.php",
         {
             task: "playCard",
             playerId: playerId,
             gameId: gameId,
-            card: card
+            card: card,
+            pw: pw
         }, 
         function(result) {
             // alert(result);
@@ -25,25 +26,30 @@ class Request{
         })
     }
 
-    createGame() {
+    createGame(playerId) {
         $.get("php/access.php",
         {
-            task: "createGame"
+            task: "createGame",
+            playerId: playerId
         }, 
         result => {
+            alert(result);
             this.game.gameId = parseInt(result);
         })
     }
 
 
-    startGame(gameId) {
+    startGame(gameId, playerId, pw) {
         $.get("php/access.php",
         {
             task: "startGame",
-            gameId: gameId
+            gameId: gameId,
+            playerId,
+            pw: pw
         }, 
         result => {
-            return;
+            this.game.updateGameState(result);
+            // return;
         })
     }
 
@@ -54,19 +60,54 @@ class Request{
             nick: nick,
             gameId: gameId
         },
-        function(result) {
-            alert(result);
+        result => {
+            // alert(result);
+            let results = result.split("_");
+            let playerId = parseInt(results[0]);
+            let pw = results[1];
+            this.game.addPlayer(playerId, nick, pw, true);
         })
     }
 
-    getCards(gameId) {
+    allCardsPlaced(gameId, playerId, pw) {
         $.get("php/access.php",
         {
-            task: "getCards",
-            gameId: gameId
+            task: "allCardsPlaced",
+            gameId: gameId,
+            playerId: playerId,
+            pw: pw
         },
-        function(result) {
-            alert(result);
+        result => {
+            if(result == 0) {
+            }
+            if(result == 1) {
+                this.endRound(gameId, playerId, pw);
+            }
+        }) 
+    }
+
+    endRound(gameId, playerId, pw) {
+        $.get("php/access.php",
+        {
+            task: "endRound",
+            gameId: gameId,
+            playerId: playerId,
+            pw: pw
+        },
+        result => {
+            console.log(result);
+            let playerInfos = result.split("-");
+            let playerData = [];
+            playerInfos.forEach(p => {
+                playerData.push(p.split(":"));
+            });
+            let crowns = [];
+            let decks = [];
+            playerData.forEach(d => {
+                crowns.push(d[0]);
+                decks.push(d[1]);
+            });
+            this.game.updateGraphics(decks, crowns);
         }) 
     }
 }

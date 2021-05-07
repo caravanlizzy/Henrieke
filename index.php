@@ -30,12 +30,13 @@
 <body>
 
 <script>
-    let game = new Game();
-    game.addPlayer("Peter1", 1);
-    game.addPlayer("Peter2", 2);
-    game.addPlayer("Peter3", 3);
-    game.addPlayer("Peter4", 4);
+    let game = new Game(1);
+    // game.addPlayer("Peter1", 1, );
+    // game.addPlayer("Peter2", 2);
+    // game.addPlayer("Peter3", 3);
+    // game.addPlayer("Peter4", 4);
     game.setupGraphic();
+    
     // game.request.createGame();
     // game.request.startGame(11);
     // game.request

@@ -65,10 +65,19 @@ class Graphic {
         c.innerHTML = card;
     }
 
+    deleteAllCards(playerId) {
+        console.log("deleting", playerId);
+        for( let i = 0; i < 11; i++){
+            this.deleteCard(playerId, i);
+        }
+    }
+
     deleteCard(playerId, card) {
         let id = "card" + card + "p" + playerId;
         let c = document.getElementById(id);
-        c.parentNode.removeChild(c);
+        if(c) {
+            c.parentNode.removeChild(c);
+        }
     }
 
     drawDiscardBox(playerId) {
@@ -94,7 +103,7 @@ class Graphic {
         this.drawBox(className, className + playerId, this.getPlayerTableau(playerId));
     }
 
-    updatecrowns(playerId, crowns) {
+    updateCrowns(playerId, crowns) {
         document.getElementById("crownBox" + playerId).innerHTML = crowns;
     }
 
@@ -114,6 +123,13 @@ class Graphic {
         let className = "statusBar";
         this.drawBox(className, className, this.getMainFrame())
         this.drawCreateGameButton();
+        this.drawJoinGameButton();
+        this.drawStartGameButton();
+        this.drawGameState();
+    }
+
+    getStatusBar() {
+        return document.getElementById("statusBar");
     }
 
     drawCreateGameButton() {
@@ -125,6 +141,39 @@ class Graphic {
             this.game.createGame();   
         } 
         document.getElementById("statusBar").append(b);
+    }
+
+    drawJoinGameButton() {
+        let b = document.createElement("div");
+        b.id = "createGameButton";
+        b.className = "button";
+        b.innerHTML = "Join Game";
+        b.onclick = e => {
+            this.game.joinGame();   
+        } 
+        document.getElementById("statusBar").append(b);
+    }
+
+    drawStartGameButton() {
+        let b = document.createElement("div");
+        b.id = "startGameButton";
+        b.className = "button";
+        b.innerHTML = "Start Game";
+        b.onclick = e => {
+            this.game.startGame();   
+        } 
+        document.getElementById("statusBar").append(b);
+    }
+
+    drawGameState() {
+        let className = "gameState";
+        let b = this.drawBox(className, className, this.getStatusBar());
+        b.innerHTML = "Game is waiting for players";
+    }
+
+    updateGameState(state) {
+        gameState = document.getElementById("gameState");
+        gameState.innerHTML = "Game is " + state;
     }
 
 }

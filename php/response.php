@@ -2,7 +2,6 @@
 
 //response sollte zu access gehören und unabhängig von game senden
 class Response{
-    
     function __construct(){
         $this->validCard = 0;
         $this->moveComplete = 0;
@@ -11,74 +10,33 @@ class Response{
         $this->decks = array();
         $this->crowns = array();
     }
-
-    function sendCards($cards) {
-        $response = '';
-        foreach($cards as $card) {
-            $response .= $card . "_";
+    function sendMoveComplete($complete) {
+        if($complete) {
+            echo "1";
+        } else {
+            echo "0";
         }
+    }
+
+    function sendPlayerInfo($info) {
+        $response = '';
+        $response .= $info[0] . "_";
+        $response .= $info[1];
         echo $response;
     }
 
-    function encode() {
-        $encoded = "";
-        if($this->validCard){
-            $encoded .= "v:1_";
-        } else{
-            $encoded .= "v:0_";
+    function sendRoundEnd($decksNCrowns) {
+        $decks = $decksNCrowns[0];
+        $crowns = $decksNCrowns[1];
+        // print_r($crowns);
+        $response = '';
+        for($i = 0; $i < count($crowns); $i++) {
+            $response .= $crowns[$i] . ":" . $decks[$i];
+            if($i < count($crowns) - 1) {
+                $response .= "-";
+            }
         }
-        if($this->moveComplete){
-            $encoded .= "m:1_";
-        } else{
-            $encoded .= "m:0_";
-        }
-        $encoded .= "g:" . $this->gameState . "_";
-        for($i = 0; $i < count($this->playedCards); $i++) {
-            $encoded .= "p" . $i . ":" . $this->playedCards[$i] . "_";
-            $encoded .= "d" . $i . ":" . $this->decks[$i] . "_";
-            $encoded .= "c" . $i . ":" . $this->crowns[$i] . "_";
-        }
-        return $encoded;
+        echo $response;
     }
 }
-
-// $r = new Response();
-// print_r($r);
-// function setCardValid() {
-//     $this->validCard = 1;
-// }
-// function unsetCardValid() {
-//     $this->validCard = 0;
-// }
-
-// function setMoveComplete() {
-//     $this->moveComplete = 1;
-// }
-// function unsetMovesComplete() {
-//     $this->moveComplete = 0;
-// }
-
-// function setDecks($decks) {
-//     $this->decks = $decks;
-// }
-
-// function setPlayedCards($playedCards) {
-//     $this->playedCards = $playedCards;
-// }
-
-// function setCrowns($crowns) {
-//     $this->crowns = $crowns;
-// }
-
-// function setGameState($gameState) {
-//     $this->gameState = $gameState;
-// }
-
-// function sendGameState() {
-//     return;
-// }
-
-// function sendResponse($response) {
-//     echo $response;
-// }
 ?>

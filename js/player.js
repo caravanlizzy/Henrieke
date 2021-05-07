@@ -1,12 +1,14 @@
 class Player{
-    constructor(name, playerId) {
+    constructor(playerId, name, pw, me) {
         this.name = name;
         this.cards = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         this.crowns = 0;
         this.color = this.getRandomColor();
         this.host = false;
         this.id = playerId;
-        this.key = "";
+        this.pw = pw;
+        this.me = me;
+        this.inGame = true;
     }
 
     setHost() {
