@@ -1,2 +1,2 @@
-# Henrieke
+# Henriekow
 Multiplayer Card Game
