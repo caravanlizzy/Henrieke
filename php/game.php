@@ -38,8 +38,6 @@ class Game{
         $result = $this->getRoundResult();
         $decks = $this->updateDecks($result);
         $crowns = $this->getCrowns();
-        // $this->response->setDecks($decks);
-        // $this->response->setCrowns($crowns);
         $updatedCrown = $this->updateCrowns($result);
         if($this->checkWin($updatedCrown)) {
             $this->endGame();
@@ -98,7 +96,6 @@ class Game{
             $randomIndex = rand(0, strlen($characters));
             $pw .= $characters[$randomIndex];
         }
-        // echo $pw;
         return $pw;
     }
 
@@ -175,7 +172,6 @@ class Game{
 
     function getRoundResult() {
         $cards = $this->getPlayedCards();
-        // $this->response->setPlayedCards($cards);
         $highest = $this->findHighestCard($cards);
         $occurrence = $this->getCardOccurrence($cards, $highest);
         $result = $this->calcRoundResult($cards, $highest, $occurrence);
@@ -215,7 +211,6 @@ class Game{
     function allCardsPlaced() {
         $playerCount = $this->dbConnecter->getPlayerCount();
         $cards = $this->getPlayedCards();
-        // print_r($cards);
         $placedCount = 0;
         for($i = 0; $i < count($cards); $i++) {
             $card = $cards[$i];
@@ -224,9 +219,6 @@ class Game{
             }
             $placedCount++;
         }
-        // echo $playerCount;
-        // echo "placed";
-        // echo $placedCount;
         return $playerCount == $placedCount;
     }
 

@@ -1,6 +1,5 @@
 <?php
 
-//response sollte zu access gehören und unabhängig von game senden
 class Response{
     function __construct(){
         $this->validCard = 0;
@@ -28,7 +27,6 @@ class Response{
     function sendRoundEnd($decksNCrowns) {
         $decks = $decksNCrowns[0];
         $crowns = $decksNCrowns[1];
-        // print_r($crowns);
         $response = '';
         for($i = 0; $i < count($crowns); $i++) {
             $response .= $crowns[$i] . ":" . $decks[$i];

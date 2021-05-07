@@ -110,66 +110,6 @@ function endRound() {
     $res->sendRoundEnd($newDecksNCrowns);
 }
 
-
-// function updateGame() {
-//     global $conn;
-//     $gameId = $_GET["gameId"];  
-//     $game = new Game($conn, $gameId);
-// }
-
-// function createGame() {
-//     global $conn;
-//     $gameId = $_GET["gameId"];
-//     $playerId = $_GET["playerId"];
-//     $newGame = new Game($conn, $gameId);
-//     return $newGame;
-// }
-
-
-// $gameId = 1;
-// $game = new Game($conn, $gameId);
-// $game->dbConnecter->resetMove();
-// $game->deleteGame();
-// $game->createGame();
-// $game->startGame();
-// $game->addPlayer("player1");
-// $game->addPlayer("player2");
-// $game->addPlayer("player3");
-// $game->addPlayer("player4");
-// $game->playCard(1,5);
-// $game->playCard(2,7);
-// $game->playCard(3,2);
-// $game->playCard(4,9);
-// $game->playCard(1,0);
-// $game->playCard(2,0);
-// $game->playCard(3,0);
-// $game->playCard(4,2);
-
-
-
-// if ($_SERVER["REQUEST_METHOD"] == "GET"){
-//     handleGet();
-//   }elseif ($_SERVER["REQUEST_METHOD"] == "POST"){
-//     handlePost();
-// }
-
-
-// function handleGet(){
-//     $task = $_GET["task"];
-//     // $data = $_GET["data"];
-//         switch ($task) {
-//         case "getPlayers":
-//             get_players();
-//             break;
-//         case "getTourneys":
-//             get_tourneys();
-//             break;
-//         default:
-//             echo "Error: Get request could not be handled.";
-//     };
-// }
-
-
 $conn->close();
 ?>
 

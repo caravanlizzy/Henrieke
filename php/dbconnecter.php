@@ -1,6 +1,5 @@
 <?php
 class DbConnecter{
-  // create player, game, move
     function __construct($conn, $gameId = 0) {
         $this->conn = $conn;
         $this->gameId = $gameId;
