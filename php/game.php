@@ -72,10 +72,10 @@ class Game{
 
     function playCard($playerId, $card) { // main function for the game flow
         if(!$this->isCardAvailable($playerId, $card)) {
-            return;
+            return 0;
         }
         $this->dbConnecter->setCard($playerId, $card);
-        return $card;
+        return 1;
     }
 
     function updateCards() {
@@ -208,7 +208,7 @@ class Game{
         return $occurrence;
     }
 
-    function allCardsPlaced() {
+    function updateGame() {
         $playerCount = $this->dbConnecter->getPlayerCount();
         $cards = $this->getPlayedCards();
         $placedCount = 0;

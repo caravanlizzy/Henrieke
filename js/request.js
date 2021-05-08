@@ -79,6 +79,7 @@ class Request{
         },
         result => {
             if(result == 0) {
+                return;
             }
             if(result == 1) {
                 this.endRound(gameId, playerId, pw);
@@ -95,7 +96,6 @@ class Request{
             pw: pw
         },
         result => {
-            console.log(result);
             let playerInfos = result.split("-");
             let playerData = [];
             playerInfos.forEach(p => {

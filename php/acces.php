@@ -26,18 +26,18 @@ if ($_SERVER["REQUEST_METHOD"] == "GET"){
 
 
 
-function handleGet(){
+function handleGet(){ //handle get requests
     $noIdCheckTasks = array("createGame", "joinGame");
     $task = $_GET["task"];
     if(!in_array($task, $noIdCheckTasks)){
-        if(!checkId()) {
+        if(!checkId()) { 
             return;
         }
     }
     call_user_func($task);
 }
 
-function checkId() {
+function checkId() { //verify player identity
     global $conn;
     $playerId = $_GET["playerId"];
     $gameId = $_GET["gameId"];
@@ -47,17 +47,18 @@ function checkId() {
     return $approved;
 }
 
-function playCard(){
+function playCard(){ //play a card
     global $conn;
+    global $res;
     $gameId = $_GET["gameId"];
     $playerId = $_GET["playerId"];
     $card = $_GET["card"];
     $game = new Game($conn, $gameId);
     $result = $game->playCard($playerId, $card);
-    echo $result;
+    $res->sendPlayCard($result);
 }
 
-function startGame() {
+function startGame() { //start game
     global $conn;
     global $res;
     $gameId = $_GET["gameId"];  
@@ -66,14 +67,14 @@ function startGame() {
     $res->sendGameState("running");
 }
 
-function createGame() {
+function createGame() { //create a new game
     global $conn;
     $game = new Game($conn);
     $gameId = $game->createGame();
     echo $gameId; 
 }
 
-function joinGame() {
+function joinGame() { //player joins a game
     global $conn;
     global $res;
     $gameId = $_GET["gameId"];  
@@ -83,7 +84,7 @@ function joinGame() {
     $res->sendPlayerInfo($playerInfo);
 }
 
-function addComputer() {
+function addComputer() { //add a bot
     global $conn;
     $gameId = $_GET["gameId"];  
     $game = new Game($conn, $gameId);
@@ -92,7 +93,7 @@ function addComputer() {
 }
 
 
-function allCardsPlaced() {
+function allCardsPlaced() { //check whether all acrds are played
     global $conn;
     global $res;
     $gameId = $_GET["gameId"];  
@@ -101,7 +102,8 @@ function allCardsPlaced() {
     $res->sendMoveComplete($complete);
 }
 
-function endRound() {
+
+function endRound() { // do the end of round calculations
     global $conn;
     global $res;
     $gameId = $_GET["gameId"];  
