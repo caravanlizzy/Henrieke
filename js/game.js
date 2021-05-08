@@ -36,11 +36,16 @@ class Game{
     }
 
     getPlayer(playerId) {
-        this.players.forEach(p => {
-            if(p.id == playerId) {
-                return p;
+        for(let i = 0; i < this.players.length; i++) {
+            if(this.players[i].id == playerId) {
+                return this.players[i];
             }
-        })
+        }
+        // this.players.forEach(p => {
+        //     if(p.id == playerId) {
+        //         return p;
+        //     }
+        // })
     }
 
     createGame() {
@@ -59,11 +64,6 @@ class Game{
         // this.drawCards();
     }
 
-    // drawBoards() {
-    //     this.players.forEach(player => {
-    //         this.graphic.drawPlayerTableau(player.id, player.name);
-    //     })        
-    // }
     updateGameState(newState) {
         this.graphic.updateGameState(newState);
     }
@@ -75,6 +75,11 @@ class Game{
                 this.graphic.drawCard(player.id, card, player.color);
             })
         })
+    }
+
+    playCard(playerId, card) {
+        let player = this.getPlayer(playerId);
+        this.request.playCard(this.gameId, player.id, player.pw,  card);
     }
 
     updateGraphics(decks, crowns) {

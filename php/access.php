@@ -3,11 +3,12 @@
 // require "dbconnecter.php";
 require "game.php";
 require "response.php";
+require "login.php"; //this file  is not part of the .git repository
 
 $servername = "localhost";
-$username = "*********";
-$password = "*********";
-$db = "********";
+$username = $name;
+$password = $pw;
+$db = $dbName;
 
 
 // Create connection
@@ -50,10 +51,13 @@ function checkId() { //verify player identity
 function playCard(){ //play a card
     global $conn;
     global $res;
+    echo "suche kiarte";
+
     $gameId = $_GET["gameId"];
     $playerId = $_GET["playerId"];
     $card = $_GET["card"];
     $game = new Game($conn, $gameId);
+    echo $card;
     $result = $game->playCard($playerId, $card);
     $res->sendPlayCard($result);
 }
@@ -93,7 +97,7 @@ function addComputer() { //add a bot
 }
 
 
-function allCardsPlaced() { //check whether all acrds are played
+function updateGame() { //check whether all acrds are played
     global $conn;
     global $res;
     $gameId = $_GET["gameId"];  

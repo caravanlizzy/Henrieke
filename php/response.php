@@ -36,5 +36,13 @@ class Response{
         }
         echo $response;
     }
+
+    function sendGameState($gameState) {
+        echo $gameState;
+    }
+
+    function sendPlayCard($r) {
+        echo $r;
+    }
 }
 ?>

@@ -71,6 +71,7 @@ class Game{
     }
 
     function playCard($playerId, $card) { // main function for the game flow
+        echo "playing";
         if(!$this->isCardAvailable($playerId, $card)) {
             return 0;
         }

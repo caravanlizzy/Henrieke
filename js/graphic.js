@@ -59,14 +59,15 @@ class Graphic {
         let parentBoxName = (card == 0 ? "zeroBox" : "nonZeroBox");
         let c = this.drawBox(className + " " + color + " " + "small", id, document.getElementById(parentBoxName + playerId)); 
         c.cardId = card;
+        c.playerId = playerId;
         c.onclick = e => { 
-            this.game.getCards();
+            this.game.playCard(c.playerId, c.cardId);
         }
         c.innerHTML = card;
     }
 
     deleteAllCards(playerId) {
-        console.log("deleting", playerId);
+        // console.log("deleting", playerId);
         for( let i = 0; i < 11; i++){
             this.deleteCard(playerId, i);
         }

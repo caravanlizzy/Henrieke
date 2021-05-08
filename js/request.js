@@ -12,6 +12,7 @@ class Request{
     }
 
     playCard(gameId, playerId, pw, card) {
+        console.log(pw);
         $.get("php/access.php",
         {
             task: "playCard",
@@ -22,7 +23,7 @@ class Request{
         }, 
         function(result) {
             // alert(result);
-            alert("played card: " + result);
+            alert(result);
         })
     }
 
@@ -69,10 +70,10 @@ class Request{
         })
     }
 
-    allCardsPlaced(gameId, playerId, pw) {
+    updateGame(gameId, playerId, pw) {
         $.get("php/access.php",
         {
-            task: "allCardsPlaced",
+            task: "updateGame",
             gameId: gameId,
             playerId: playerId,
             pw: pw
