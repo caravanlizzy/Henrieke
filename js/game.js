@@ -7,13 +7,18 @@ class Game{
         this.request = new Request(this);
     }
 
+    createGame() {
+        this.request.createGame();
+    }
 
+    startGame() {
+        let me = this.getMe();
+        this.request.startGame(this.gameId, me.id, me.pw);
+    }
 
-    addPlayer(playerId, nick, pw = false, me = false) {
-        let newPlayer = new Player(playerId, nick, pw, me);
-        this.players.push(newPlayer);
-        this.graphic.drawPlayerTableau(playerId, nick);
-        this.updateCards();
+    getGame() {
+        let me = this.getMe();
+        this.request.getGame(this.gameId, me.id, me.pw);
     }
 
     joinGame() {
@@ -25,6 +30,23 @@ class Game{
         this.request.joinGame(this.gameId, this.meName);
     }
 
+    getPlayer(playerId) {
+        for(let i = 0; i < this.players.length; i++) {
+            if(this.players[i].id == playerId) {
+                return this.players[i];
+            }
+        }
+    }
+
+    getPlayerIds() {
+        let playerIds = [];
+        for(let i = 0; i < this.players.length; i++) {
+            playerIds.push(this.players[i].id);
+        }
+        return playerIds;
+    }
+
+
     getMe() {
         for(let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
@@ -35,37 +57,20 @@ class Game{
         return false;
     }
 
-    getPlayer(playerId) {
-        for(let i = 0; i < this.players.length; i++) {
-            if(this.players[i].id == playerId) {
-                return this.players[i];
-            }
+    
+    addPlayer(playerId, nick, pw = false, me = false) {
+        // alert(playerId);
+        let newPlayer = new Player(playerId, nick, pw, me);
+        this.players.push(newPlayer);
+        this.graphic.drawPlayerTableau(playerId, nick);
+        this.updateCards();
+    }
+
+    playCard(playerId, card) {
+        let player = this.getPlayer(playerId);
+        if(player.pw != false && player.me == true){
+            this.request.playCard(this.gameId, player.id, player.pw,  card);
         }
-        // this.players.forEach(p => {
-        //     if(p.id == playerId) {
-        //         return p;
-        //     }
-        // })
-    }
-
-    createGame() {
-        this.request.createGame();
-    }
-
-    startGame() {
-        let me = this.getMe();
-        this.request.startGame(this.gameId, me.id, me.pw);
-    }
-
-    setupGraphic() {
-        this.graphic.drawMainFrame();
-        this.graphic.drawStatusBar();
-        // this.drawBoards();
-        // this.drawCards();
-    }
-
-    updateGameState(newState) {
-        this.graphic.updateGameState(newState);
     }
 
     updateCards() {
@@ -77,40 +82,52 @@ class Game{
         })
     }
 
-    playCard(playerId, card) {
-        let player = this.getPlayer(playerId);
-        this.request.playCard(this.gameId, player.id, player.pw,  card);
+    setupGraphic() {
+        this.graphic.drawMainFrame();
+        this.graphic.drawStatusBar();
+        // this.drawBoards();
+        // this.drawCards();
     }
 
-    updateGraphics(decks, crowns) {
-        for(let i = 0; i < crowns.length; i++) {
+    updateGraphics(display = false) {
+        for(let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
-            this.graphic.updateCrowns(player.id, crowns[i]);
+            this.graphic.updateCrowns(player.id, player.crowns);
             this.graphic.deleteAllCards(player.id);
-            let deck = decks[i];
-            let cards = this.getCardsFromDeck(deck);
+            let cards = player.cards;
             for(let j = 0; j < 11; j++) {
                 if(j in cards){
                     this.graphic.drawCard(player.id, j, player.color);
-                } else {
-                    this.graphic.drawDiscard(player.id, j, player.color);
                 }
             }
         }
     }
 
-    getCardsFromDeck(deck){
-        let cards = [];
-        for(let i = 0; i < deck.length; i++){
-            if(deck[i] == '1'){
-                cards.push(i);
-            }
+    decodeGame(encodedGame) {
+        let players = encodedGame.split("-");
+        let playerInfos = [];
+        for(let i = 0; i < players.length; i++) {
+            let playerInfo = players[i].split(":");
+            playerInfos.push(playerInfo);
         }
-        return cards;
+        return playerInfos;
     }
 
-    allCardsPlaced() {
-        let me = this.getMe();
-        this.request.allCardsPlaced(this.gameId, me.id, me.pw);
+    updateGameState(newState) {
+        this.graphic.updateGameState(newState);
     }
+
+    // onEnteringGame() {
+    //     return;
+    // }
+
+    // onLeavingGame() {
+    //     return;
+    // }
+
+    // setupGame() {
+    //     return;
+    // }
+
+
 }

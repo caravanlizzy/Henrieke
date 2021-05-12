@@ -9,6 +9,7 @@ class Player{
         this.pw = pw;
         this.me = me;
         this.inGame = true;
+        this.hasPlayed = false;
     }
 
     setHost() {
@@ -30,6 +31,17 @@ class Player{
     reset() {
         this.cards = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         this.crowns = 0;
+    }
+
+    removeCard(card) {
+        let index = this.cards.indexOf(card);
+        if(index > 0) {
+            this.cards.splice(index, 1);
+        }
+    }
+
+    updateCrowns(crowns) {
+        this.crowns = crowns;
     }
 
     getRandomColor() {

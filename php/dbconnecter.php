@@ -13,11 +13,12 @@ class DbConnecter{
         return $gameId;
     }
 
-    function createGame($gameId) {
-        $sql = "INSERT INTO Games (gameId, playerCount, round, state) VALUES ('$gameId', '0', '0', 'idle')";
+    function createGame($gameId, $code) {
+        $sql = "INSERT INTO Games (gameId, playerCount, round, state, code) VALUES ('$gameId', '0', '0', 'idle', '$code')";
         $this->conn->query($sql);
         return $gameId;
     }
+
 
     function isUnique($pw) {
         $sql = "SELECT COUNT(*) FROM Players WHERE pw ='$pw'";
@@ -108,6 +109,12 @@ class DbConnecter{
         return $playerIds;
     }
 
+    function getNick($playerId) {
+        $sql = "SELECT nick FROM Players WHERE gameId='$this->gameId' AND playerId='$playerId'";
+        $result = $this->conn->query($sql); 
+        return $result->fetch_assoc()['nick'];
+    }
+
     function getCrowns($playerId) {
         $sql = "SELECT crowns FROM Players WHERE gameId='$this->gameId' AND playerId='$playerId'";
         $result = $this->conn->query($sql); 
@@ -176,7 +183,10 @@ class DbConnecter{
         return 1;
     }
 
-
-
+    function removeCompleteGame() {
+        $this->deleteGame();
+        $this->deleteAllPlayers();
+        $this->deleteMove();
+    }
 }
 ?>

@@ -51,13 +51,10 @@ function checkId() { //verify player identity
 function playCard(){ //play a card
     global $conn;
     global $res;
-    echo "suche kiarte";
-
     $gameId = $_GET["gameId"];
     $playerId = $_GET["playerId"];
     $card = $_GET["card"];
     $game = new Game($conn, $gameId);
-    echo $card;
     $result = $game->playCard($playerId, $card);
     $res->sendPlayCard($result);
 }
@@ -96,14 +93,30 @@ function addComputer() { //add a bot
     // need to initialize the bot here
 }
 
+function removeGame() {
+    global $conn;
+    $gameId = $_GET["gameId"];
+    $game = new Game($conn, $gameId);
+    $game->dbConnecter->removeGame();
+}
 
-function updateGame() { //check whether all acrds are played
+
+// function endRound() { //check whether all acrds are played
+//     global $conn;
+//     global $res;
+//     $gameId = $_GET["gameId"];  
+//     $game = new Game($conn, $gameId);
+//     $complete = $game->checkMoveComplete();
+//     $res->sendMoveComplete($complete);
+// }
+
+function getGame() {
     global $conn;
     global $res;
     $gameId = $_GET["gameId"];  
     $game = new Game($conn, $gameId);
-    $complete = $game->checkMoveComplete();
-    $res->sendMoveComplete($complete);
+    $gameComplete = $game->getGame();
+    $res->sendGame($gameComplete);
 }
 
 

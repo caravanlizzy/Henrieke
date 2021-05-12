@@ -15,8 +15,9 @@ class Game{
 
     function createGame() {
         //host has to be checked
+        $code = $this->createPassword(6);
         $gameId = $this->dbConnecter->getHighestGameId() + 1;
-        $this->gameId = $this->dbConnecter->createGame($gameId);
+        $this->gameId = $this->dbConnecter->createGame($gameId, $code);
         return $gameId;
     }
 
@@ -71,7 +72,6 @@ class Game{
     }
 
     function playCard($playerId, $card) { // main function for the game flow
-        echo "playing";
         if(!$this->isCardAvailable($playerId, $card)) {
             return 0;
         }
@@ -83,6 +83,21 @@ class Game{
         $cards = $this->getPlayedCards();
     }
 
+    function getGame(){
+        $playerIds = $this->dbConnecter->getPlayerIds();
+        $nicks = array();
+        $cards = array();
+        $decks = array();
+        $crowns = array();
+        foreach($playerIds as $p) {
+            array_push($cards, $this->dbConnecter->getCard($p));
+            array_push($nicks, $this->dbConnecter->getNick($p));
+            array_push($decks, $this->dbConnecter->getDeck($p));
+            array_push($crowns, $this->dbConnecter->getCrowns($p));
+        }
+        return array($playerIds, $nicks, $cards, $decks, $crowns);
+    }
+
 
 
     function checkGameState() {
@@ -90,10 +105,10 @@ class Game{
         // $this->response
     }
 
-    function createPassword() {
+    function createPassword($length) {
         $pw = '';
         $characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        for($i = 0; $i < 16; $i++) {
+        for($i = 0; $i < $length; $i++) {
             $randomIndex = rand(0, strlen($characters));
             $pw .= $characters[$randomIndex];
         }
@@ -108,7 +123,7 @@ class Game{
     }
 
     function addPlayer($nick) {
-        $pw = $this->createPassword();
+        $pw = $this->createPassword(16);
         $playerId = $this->dbConnecter->createPlayer($nick, $pw);
         $this->dbConnecter->increasePlayerCount();
         $this->dbConnecter->createMove($playerId);

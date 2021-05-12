@@ -17,6 +17,23 @@ class Response{
         }
     }
 
+    function sendGame($gameComplete) {
+        $response = '';
+        $playerIds = $gameComplete[0];
+        $nicks = $gameComplete[1];
+        $cards = $gameComplete[2];
+        $decks = $gameComplete[3];
+        $crowns = $gameComplete[4];
+        for($i = 0; $i < count($playerIds); $i++) {
+            $response .= $playerIds[$i] . ":" .$nicks[$i] . ":" . $cards[$i] . ":" . $decks[$i] . ":" . $crowns[$i];
+            if($i< count($playerIds) - 1) {
+                $response .= "-";
+            }
+        }
+        echo $response;
+        return $response;
+    }
+
     function sendPlayerInfo($info) {
         $response = '';
         $response .= $info[0] . "_";
@@ -41,8 +58,8 @@ class Response{
         echo $gameState;
     }
 
-    function sendPlayCard($r) {
-        echo $r;
+    function sendPlayCard($response) {
+        echo $response;
     }
 }
 ?>

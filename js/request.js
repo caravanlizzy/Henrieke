@@ -12,7 +12,6 @@ class Request{
     }
 
     playCard(gameId, playerId, pw, card) {
-        console.log(pw);
         $.get("php/access.php",
         {
             task: "playCard",
@@ -21,9 +20,8 @@ class Request{
             card: card,
             pw: pw
         }, 
-        function(result) {
-            // alert(result);
-            alert(result);
+        result => {
+            this.getGame(gameId, playerId, pw);
         })
     }
 
@@ -34,7 +32,6 @@ class Request{
             playerId: playerId
         }, 
         result => {
-            alert(result);
             this.game.gameId = parseInt(result);
         })
     }
@@ -67,24 +64,44 @@ class Request{
             let playerId = parseInt(results[0]);
             let pw = results[1];
             this.game.addPlayer(playerId, nick, pw, true);
+            this.getGame(gameId, playerId, pw);
         })
     }
 
-    updateGame(gameId, playerId, pw) {
+    getGame(gameId, playerId, pw) {
         $.get("php/access.php",
         {
-            task: "updateGame",
+            task: "getGame",
             gameId: gameId,
             playerId: playerId,
             pw: pw
         },
         result => {
-            if(result == 0) {
-                return;
+            let playerIds = this.game.getPlayerIds();
+            let playerInfos = this.game.decodeGame(result);
+            for(let i = 0; i < playerInfos.length; i++) {
+                let playerInfo = playerInfos[i];
+                let playerId = parseInt(playerInfo[0]);
+                let nick = playerInfo[1];
+                let playedCard = playerInfo[2];
+                let deck = playerInfo[3];
+                let crowns = playerInfo[4];
+                if(playerIds.indexOf(playerId) < 0) {
+                    this.game.addPlayer(playerId, nick);
+                } 
+                let player = this.game.getPlayer(playerId);
+                if(playedCard != '11') {
+                    player.hasPlayed = true;
+                    this.game.graphic.updateCardDisplay(playerId, "X");
+                }
+                for(let j = 0; j < deck.length; j++) {
+                    if(deck[j] == '0'){
+                        player.removeCard(j);
+                    }
+                }
+                player.updateCrowns(crowns);
             }
-            if(result == 1) {
-                this.endRound(gameId, playerId, pw);
-            }
+            this.game.updateGraphics();
         }) 
     }
 
@@ -111,4 +128,18 @@ class Request{
             this.game.updateGraphics(decks, crowns);
         }) 
     }
+
+    removeGame(gameId, playerId, pw) {
+        $.get("php/access.php", {
+            task: "removeGame",
+            gameId: gameId,
+            playerId: playerId,
+            pw: pw
+        },
+        result => {
+            this.getGame(gameId, playerId, pw);
+        });
+    }
+
+    
 }
